@@ -851,6 +851,69 @@ impl Donly {
             }
         }
     }
+    
+    /// Sprawdza czy użytkownik jest właścicielem produktu
+    pub fn is_product_owner(&self, product_id: U256, user: Address) -> bool {
+        if product_id == U256::from(1) {
+            self.product1_owner.get() == user
+        } else if product_id == U256::from(2) {
+            self.product2_owner.get() == user
+        } else if product_id == U256::from(3) {
+            self.product3_owner.get() == user
+        } else {
+            false
+        }
+    }
+    
+    /// Dezaktywuje produkt (tylko właściciel lub admin kampanii)
+    pub fn deactivate_product(&mut self, product_id: U256) -> bool {
+        // Sprawdź czy produkt istnieje i jest aktywny
+        if !self.is_product_active(product_id) {
+            panic!("Product not active");
+        }
+        
+        // Sprawdź czy produkt nie jest już sprzedany
+        if self.is_product_sold(product_id) {
+            panic!("Cannot deactivate sold product");
+        }
+        
+        let user = self.vm().msg_sender();
+        
+        // Sprawdź czy użytkownik jest właścicielem produktu
+        let is_owner = self.is_product_owner(product_id, user);
+        
+        // Sprawdź czy użytkownik jest adminem kampanii
+        let (_, _, _, _, _, _, _, campaign_id, _, _, _) = self.get_product_data(product_id);
+        let is_admin = self.is_campaign_admin(campaign_id, user);
+        
+        if !is_owner && !is_admin {
+            panic!("Only product owner or campaign admin can deactivate");
+        }
+        
+        // Dezaktywuj produkt
+        if product_id == U256::from(1) {
+            self.product1_is_active.set(false);
+        } else if product_id == U256::from(2) {
+            self.product2_is_active.set(false);
+        } else if product_id == U256::from(3) {
+            self.product3_is_active.set(false);
+        }
+        
+        true
+    }
+    
+    /// Pobiera właściciela produktu
+    pub fn get_product_owner(&self, product_id: U256) -> Address {
+        if product_id == U256::from(1) {
+            self.product1_owner.get()
+        } else if product_id == U256::from(2) {
+            self.product2_owner.get()
+        } else if product_id == U256::from(3) {
+            self.product3_owner.get()
+        } else {
+            Address::ZERO
+        }
+    }
 }
 
 #[cfg(test)]
@@ -1571,5 +1634,206 @@ mod test {
         
         // Sprawdź czy kwota została zaktualizowana
         assert_eq!(contract.get_campaign_total_amount(campaign_id), U256::from(1000));
+    }
+    
+    // ===== PRODUCT MANAGEMENT TESTS =====
+    
+    #[test]
+    fn test_is_product_owner() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(100)
+        );
+        
+        // Dodaj produkt
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Product Description".to_string(),
+            "https://example.com/product.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        // Sprawdź dane produktu
+        let (_, _, _, _, _, _, owner, _, _, _, _) = contract.get_product_data(product_id);
+        
+        // Sprawdź czy właściciel to rzeczywisty właściciel
+        assert!(contract.is_product_owner(product_id, owner));
+        
+        // Sprawdź czy inny adres nie jest właścicielem
+        assert!(!contract.is_product_owner(product_id, Address::from([1u8; 20])));
+    }
+    
+    #[test]
+    fn test_deactivate_product_by_owner() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(100)
+        );
+        
+        // Dodaj produkt
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Product Description".to_string(),
+            "https://example.com/product.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        // Sprawdź czy produkt jest aktywny
+        assert!(contract.is_product_active(product_id));
+        
+        // Dezaktywuj produkt przez właściciela
+        let result = contract.deactivate_product(product_id);
+        assert!(result);
+        
+        // Sprawdź czy produkt został dezaktywowany
+        assert!(!contract.is_product_active(product_id));
+    }
+    
+    #[test]
+    fn test_deactivate_product_by_admin() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(100)
+        );
+        
+        // Dodaj produkt
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Product Description".to_string(),
+            "https://example.com/product.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        // Sprawdź czy produkt jest aktywny
+        assert!(contract.is_product_active(product_id));
+        
+        // Sprawdź dane kampanii
+        let (_, _, _, _, admin, _, _, _, _, _, _, _, _) = contract.get_campaign_data(campaign_id);
+        
+        // Dezaktywuj produkt przez admina (w testach msg_sender() to admin)
+        let result = contract.deactivate_product(product_id);
+        assert!(result);
+        
+        // Sprawdź czy produkt został dezaktywowany
+        assert!(!contract.is_product_active(product_id));
+    }
+    
+    #[test]
+    #[should_panic(expected = "Product not active")]
+    fn test_deactivate_product_inactive() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Próba dezaktywacji nieistniejącego produktu
+        contract.deactivate_product(U256::from(999));
+    }
+    
+    #[test]
+    #[should_panic(expected = "Cannot deactivate sold product")]
+    fn test_deactivate_product_sold() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(100)
+        );
+        
+        // Dodaj produkt
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Product Description".to_string(),
+            "https://example.com/product.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        // Kup produkt
+        contract.purchase_product(product_id);
+        
+        // Próba dezaktywacji sprzedanego produktu
+        contract.deactivate_product(product_id);
+    }
+    
+    #[test]
+    fn test_get_product_owner() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(100)
+        );
+        
+        // Dodaj produkt
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Product Description".to_string(),
+            "https://example.com/product.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        // Pobierz właściciela produktu
+        let owner = contract.get_product_owner(product_id);
+        
+        // Sprawdź czy właściciel nie jest ZERO
+        assert_ne!(owner, Address::ZERO);
+        
+        // Sprawdź czy właściciel to rzeczywisty właściciel
+        assert!(contract.is_product_owner(product_id, owner));
     }
 }
