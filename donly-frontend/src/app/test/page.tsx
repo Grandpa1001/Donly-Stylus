@@ -7,15 +7,10 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 export default function TestPage() {
-  const [categoryName, setCategoryName] = useState('')
-  const [campaignTitle, setCampaignTitle] = useState('')
-  const [campaignDescription, setCampaignDescription] = useState('')
   const [destinationWallet, setDestinationWallet] = useState('')
   const [maxProducts, setMaxProducts] = useState('')
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [selectedCampaignId, setSelectedCampaignId] = useState('')
-  const [productName, setProductName] = useState('')
-  const [productDescription, setProductDescription] = useState('')
   const [productPrice, setProductPrice] = useState('')
   const [selectedProductId, setSelectedProductId] = useState('')
   
@@ -28,7 +23,8 @@ export default function TestPage() {
     createCategory,
     createCampaign,
     addProduct,
-    purchaseProduct
+    purchaseProduct,
+    withdrawCampaignFunds
   } = useContract()
 
   const { categoryCount, campaignCount, productCount } = useContractRead()
@@ -194,10 +190,8 @@ export default function TestPage() {
   }, [categoryCount, campaignCount, productCount])
 
   const handleCreateCategory = async () => {
-    if (!categoryName) return
     try {
-      await createCategory(categoryName)
-      setCategoryName('')
+      await createCategory()
       alert('Category created successfully!')
     } catch (error) {
       console.error('Error creating category:', error)
@@ -206,17 +200,13 @@ export default function TestPage() {
   }
 
   const handleCreateCampaign = async () => {
-    if (!campaignTitle || !campaignDescription || !destinationWallet || !maxProducts || !selectedCategoryId) return
+    if (!destinationWallet || !maxProducts || !selectedCategoryId) return
     try {
       await createCampaign(
         BigInt(selectedCategoryId),
-        campaignTitle,
-        campaignDescription,
         destinationWallet as `0x${string}`,
         BigInt(maxProducts)
       )
-      setCampaignTitle('')
-      setCampaignDescription('')
       setDestinationWallet('')
       setMaxProducts('')
       setSelectedCategoryId('')
@@ -228,17 +218,13 @@ export default function TestPage() {
   }
 
   const handleAddProduct = async () => {
-    if (!productName || !productDescription || !productPrice || !selectedCampaignId || !selectedCategoryId) return
+    if (!productPrice || !selectedCampaignId || !selectedCategoryId) return
     try {
       await addProduct(
         BigInt(selectedCampaignId),
         BigInt(selectedCategoryId),
-        productName,
-        productDescription,
         BigInt(productPrice)
       )
-      setProductName('')
-      setProductDescription('')
       setProductPrice('')
       setSelectedCampaignId('')
       setSelectedCategoryId('')
@@ -277,7 +263,8 @@ export default function TestPage() {
       const confirmed = confirm(
         `Purchase Product #${selectedProductId}?\n\n` +
         `Price: ${priceInEth.toFixed(6)} ETH (${priceInWei.toString()} wei)\n\n` +
-        `This will send ${priceInEth.toFixed(6)} ETH to the campaign.`
+        `This will send ${priceInEth.toFixed(6)} ETH to the campaign.\n` +
+        `If this is the last product, funds will be automatically transferred to the destination wallet.`
       )
       
       if (!confirmed) return
@@ -297,6 +284,22 @@ export default function TestPage() {
       alert(`Error purchasing product: ${errorMessage}`)
     }
   }
+
+  const handleWithdrawCampaignFunds = async () => {
+    if (!selectedCampaignId) return
+    try {
+      await withdrawCampaignFunds(BigInt(selectedCampaignId))
+      alert('Campaign funds withdrawn successfully!')
+      setSelectedCampaignId('')
+      // Refresh the campaigns list
+      fetchCampaigns()
+    } catch (error) {
+      console.error('Error withdrawing campaign funds:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      alert(`Error withdrawing campaign funds: ${errorMessage}`)
+    }
+  }
+
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -460,44 +463,23 @@ export default function TestPage() {
 
         {/* Forms Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Create Category */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Create Category</h2>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Category name"
-                value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                onClick={handleCreateCategory}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Create Category
-              </button>
-            </div>
+        {/* Create Category */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Create Category</h2>
+          <div className="space-y-4">
+            <button
+              onClick={handleCreateCategory}
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Create Category
+            </button>
           </div>
+        </div>
 
           {/* Create Campaign */}
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Create Campaign</h2>
             <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Campaign title"
-                value={campaignTitle}
-                onChange={(e) => setCampaignTitle(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
-              <textarea
-                placeholder="Campaign description"
-                value={campaignDescription}
-                onChange={(e) => setCampaignDescription(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                rows={3}
-              />
               <input
                 type="text"
                 placeholder="Destination wallet (0x...)"
@@ -532,20 +514,6 @@ export default function TestPage() {
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Add Product</h2>
             <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Product name"
-                value={productName}
-                onChange={(e) => setProductName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-              <textarea
-                placeholder="Product description"
-                value={productDescription}
-                onChange={(e) => setProductDescription(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                rows={3}
-              />
               <input
                 type="number"
                 placeholder="Price (wei)"
@@ -594,6 +562,31 @@ export default function TestPage() {
                 Purchase Product
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Withdraw Campaign Funds */}
+        <div className="mt-8">
+          <div className="bg-white p-6 rounded-lg shadow max-w-md mx-auto">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Withdraw Campaign Funds</h2>
+            <div className="space-y-4">
+              <input
+                type="number"
+                placeholder="Campaign ID"
+                value={selectedCampaignId}
+                onChange={(e) => setSelectedCampaignId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+              <button
+                onClick={handleWithdrawCampaignFunds}
+                className="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
+              >
+                Withdraw Campaign Funds
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">
+              Manual withdrawal for campaign admin. Only the campaign admin can withdraw funds.
+            </p>
           </div>
         </div>
 

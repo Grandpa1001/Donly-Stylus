@@ -8,7 +8,7 @@ const client = createPublicClient({
   transport: http(process.env.NEXT_PUBLIC_ARBITRUM_SEPOLIA_RPC_URL)
 })
 
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_DONLY_CONTRACT_ADDRESS || '0x2602c51a914d9bd5c10a96033661b09d03f805f0'
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_DONLY_CONTRACT_ADDRESS || '0xc2ad3070ff0a301f5df343d889da2a08eacd9792'
 
 export async function GET(
   request: NextRequest,
@@ -18,7 +18,7 @@ export async function GET(
     const campaignId = BigInt(params.id)
     
     // Fetch all campaign data in one call
-    const [categoryId, admin, isActive, soldProductsCount, maxSoldProducts, titleHash, descriptionHash, destinationWallet] = await client.readContract({
+    const [categoryId, admin, isActive, soldProductsCount, maxSoldProducts, destinationWallet] = await client.readContract({
       address: CONTRACT_ADDRESS as `0x${string}`,
       abi: DONLY_ABI,
       functionName: 'getCampaignData',
@@ -32,8 +32,6 @@ export async function GET(
       isActive: isActive,
       soldProductsCount: soldProductsCount.toString(),
       maxSoldProducts: maxSoldProducts.toString(),
-      titleHash: titleHash.toString(),
-      descriptionHash: descriptionHash.toString(),
       destinationWallet: destinationWallet,
       progress: maxSoldProducts > 0n ? 
         Math.round((Number(soldProductsCount) / Number(maxSoldProducts)) * 100) : 0

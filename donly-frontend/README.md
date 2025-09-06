@@ -52,7 +52,7 @@ Stwórz plik `.env.local`:
 NEXT_PUBLIC_ARBITRUM_SEPOLIA_RPC_URL=https://sepolia-rollup.arbitrum.io/rpc
 
 # Donly Contract Address (Arbitrum Sepolia)
-NEXT_PUBLIC_DONLY_CONTRACT_ADDRESS=0x2602c51a914d9bd5c10a96033661b09d03f805f0
+NEXT_PUBLIC_DONLY_CONTRACT_ADDRESS=0xc2ad3070ff0a301f5df343d889da2a08eacd9792
 
 # WalletConnect Project ID (get from https://cloud.walletconnect.com/)
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
@@ -69,7 +69,7 @@ Aplikacja będzie dostępna pod adresem: `http://localhost:3000`
 
 ### **Adres kontraktu**
 ```
-0x2602c51a914d9bd5c10a96033661b09d03f805f0
+0xc2ad3070ff0a301f5df343d889da2a08eacd9792
 ```
 
 ### **Sieć**

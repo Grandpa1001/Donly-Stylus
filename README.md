@@ -55,8 +55,25 @@ npm run dev
 - [x] Konfiguracja frontendu React
 - [x] Implementacja struktur danych
 - [x] Implementacja logiki biznesowej
-- [ ] Integracja frontend-backend
-- [ ] Testy i optymalizacja
+- [x] Integracja frontend-backend
+- [x] Testy i optymalizacja
+- [x] Deployment na Arbitrum Sepolia
+
+## 🚀 **Deployment**
+
+Smart kontrakt został zdeployowany na **Arbitrum Sepolia**:
+
+- **Adres kontraktu**: `0xc2ad3070ff0a301f5df343d889da2a08eacd9792`
+- **Sieć**: Arbitrum Sepolia (Chain ID: 421614)
+- **Explorer**: [Arbiscan Sepolia](https://sepolia.arbiscan.io/address/0xc2ad3070ff0a301f5df343d889da2a08eacd9792)
+- **RPC URL**: `https://sepolia-rollup.arbitrum.io/rpc`
+
+### Funkcjonalności kontraktu:
+- ✅ Dynamiczne kategorie, kampanie i produkty
+- ✅ System płatności i zakupów
+- ✅ Automatyczna wypłata środków po zakończeniu kampanii
+- ✅ Ręczna wypłata środków przez admina kampanii
+- ✅ Walidacja uprawnień i bezpieczeństwo
 
 ## 📄 **Licencja**
 

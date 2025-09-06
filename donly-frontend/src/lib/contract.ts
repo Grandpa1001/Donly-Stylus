@@ -1,4 +1,4 @@
-export const DONLY_ADDRESS = process.env.NEXT_PUBLIC_DONLY_CONTRACT_ADDRESS || '0xf911ee1d17b0d97fff83fc2dd172a5ced688b115'
+export const DONLY_ADDRESS = process.env.NEXT_PUBLIC_DONLY_CONTRACT_ADDRESS || '0xc2ad3070ff0a301f5df343d889da2a08eacd9792'
 
 export const DONLY_ABI = [
   // Category functions
@@ -12,16 +12,9 @@ export const DONLY_ABI = [
   {
     "type": "function",
     "name": "createCategory",
-    "inputs": [{"type": "string", "name": "name"}],
+    "inputs": [],
     "outputs": [{"type": "uint256"}],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "getCategoryNameHash",
-    "inputs": [{"type": "uint256", "name": "id"}],
-    "outputs": [{"type": "uint256"}],
-    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -58,8 +51,6 @@ export const DONLY_ABI = [
     "name": "createCampaign",
     "inputs": [
       {"type": "uint256", "name": "category_id"},
-      {"type": "string", "name": "title"},
-      {"type": "string", "name": "description"},
       {"type": "address", "name": "destination_wallet"},
       {"type": "uint256", "name": "max_sold_products"}
     ],
@@ -76,8 +67,6 @@ export const DONLY_ABI = [
       {"type": "bool", "name": "isActive"},
       {"type": "uint256", "name": "soldProductsCount"},
       {"type": "uint256", "name": "maxSoldProducts"},
-      {"type": "uint256", "name": "titleHash"},
-      {"type": "uint256", "name": "descriptionHash"},
       {"type": "address", "name": "destinationWallet"}
     ],
     "stateMutability": "view"
@@ -87,6 +76,13 @@ export const DONLY_ABI = [
     "name": "deactivateCampaign",
     "inputs": [{"type": "uint256", "name": "id"}],
     "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "withdrawCampaignFunds",
+    "inputs": [{"type": "uint256", "name": "campaign_id"}],
+    "outputs": [{"type": "bool"}],
     "stateMutability": "nonpayable"
   },
 
@@ -104,8 +100,6 @@ export const DONLY_ABI = [
     "inputs": [
       {"type": "uint256", "name": "campaign_id"},
       {"type": "uint256", "name": "category_id"},
-      {"type": "string", "name": "name"},
-      {"type": "string", "name": "description"},
       {"type": "uint256", "name": "price"}
     ],
     "outputs": [{"type": "uint256"}],
@@ -143,7 +137,7 @@ export const DONLY_ABI = [
     "type": "function",
     "name": "purchaseProduct",
     "inputs": [{"type": "uint256", "name": "product_id"}],
-    "outputs": [],
+    "outputs": [{"type": "bool"}],
     "stateMutability": "payable"
   },
   {

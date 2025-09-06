@@ -8,7 +8,7 @@ const client = createPublicClient({
   transport: http(process.env.NEXT_PUBLIC_ARBITRUM_SEPOLIA_RPC_URL)
 })
 
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_DONLY_CONTRACT_ADDRESS || '0xf911ee1d17b0d97fff83fc2dd172a5ced688b115'
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_DONLY_CONTRACT_ADDRESS || '0xc2ad3070ff0a301f5df343d889da2a08eacd9792'
 
 export async function GET(
   request: NextRequest,

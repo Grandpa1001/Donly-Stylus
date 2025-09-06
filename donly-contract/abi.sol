@@ -27,6 +27,8 @@ interface IDonly  {
 
     function deactivateCampaign(uint256 id) external;
 
+    function withdrawCampaignFunds(uint256 campaign_id) external returns (bool);
+
     function productCount() external view returns (uint256);
 
     function addProduct(uint256 campaign_id, uint256 category_id, string calldata name, string calldata description, uint256 price) external returns (uint256);
@@ -39,7 +41,7 @@ interface IDonly  {
 
     function getProductIsSold(uint256 id) external view returns (bool);
 
-    function purchaseProduct(uint256 product_id) external payable;
+    function purchaseProduct(uint256 product_id) external payable returns (bool);
 
     function deactivateProduct(uint256 product_id) external;
 }
