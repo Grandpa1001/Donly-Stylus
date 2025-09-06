@@ -29,6 +29,10 @@ debug = ["stylus-sdk/debug"]
 mini-alloc = ["stylus-sdk/mini-alloc"]
 
 
+[[bin]]
+name = "donly-contract"
+path = "src/main.rs"
+
 [lib]
 crate-type = ["lib", "cdylib"]
 
