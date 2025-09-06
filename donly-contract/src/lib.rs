@@ -773,13 +773,14 @@ impl Donly {
     
     /// Kupuje produkt
     pub fn purchase_product(&mut self, product_id: U256) -> bool {
+        // Sprawdź czy produkt nie jest sprzedany (najpierw sprawdź sprzedaż)
+        if self.is_product_sold(product_id) {
+            panic!("Product already sold");
+        }
+        
         // Sprawdź czy produkt istnieje i jest aktywny
         if !self.is_product_active(product_id) {
             panic!("Product not active");
-        }
-        
-        if self.is_product_sold(product_id) {
-            panic!("Product already sold");
         }
         
         // Pobierz dane produktu
@@ -790,18 +791,21 @@ impl Donly {
             panic!("Campaign not active");
         }
         
-        // Oznacz produkt jako sprzedany
+        // Oznacz produkt jako sprzedany i dezaktywuj
         let sold_at = U256::from(self.vm().block_timestamp());
         
         if product_id == U256::from(1) {
             self.product1_is_sold.set(true);
             self.product1_sold_at.set(sold_at);
+            self.product1_is_active.set(false); // Dezaktywuj po sprzedaży
         } else if product_id == U256::from(2) {
             self.product2_is_sold.set(true);
             self.product2_sold_at.set(sold_at);
+            self.product2_is_active.set(false); // Dezaktywuj po sprzedaży
         } else if product_id == U256::from(3) {
             self.product3_is_sold.set(true);
             self.product3_sold_at.set(sold_at);
+            self.product3_is_active.set(false); // Dezaktywuj po sprzedaży
         }
         
         // Aktualizuj statystyki kampanii
@@ -965,21 +969,21 @@ impl Donly {
         }
     }
     
-    /// Usuwa produkt (dezaktywuje) - tylko przez właściciela
-    pub fn withdraw_product(&mut self, product_id: U256) -> bool {
+    /// Dezaktywuje produkt - tylko przez właściciela (nie można dezaktywować sprzedanego)
+    pub fn deactivate_product_by_owner(&mut self, product_id: U256) -> bool {
         // Sprawdź czy produkt istnieje
         if product_id < U256::from(1) || product_id > U256::from(3) {
             panic!("Product not found");
         }
         
+        // Sprawdź czy produkt nie jest sprzedany (najpierw sprawdź sprzedaż)
+        if self.is_product_sold(product_id) {
+            panic!("Cannot deactivate sold product");
+        }
+        
         // Sprawdź czy produkt jest aktywny
         if !self.is_product_active(product_id) {
             panic!("Product not active");
-        }
-        
-        // Sprawdź czy produkt nie jest sprzedany
-        if self.is_product_sold(product_id) {
-            panic!("Cannot withdraw sold product");
         }
         
         // Sprawdź czy wywołujący to właściciel
@@ -1002,21 +1006,21 @@ impl Donly {
         true
     }
     
-    /// Usuwa produkt (dezaktywuje) - przez admina kampanii
-    pub fn withdraw_product_by_admin(&mut self, product_id: U256) -> bool {
+    /// Dezaktywuje produkt - przez admina kampanii (nie można dezaktywować sprzedanego)
+    pub fn deactivate_product_by_admin(&mut self, product_id: U256) -> bool {
         // Sprawdź czy produkt istnieje
         if product_id < U256::from(1) || product_id > U256::from(3) {
             panic!("Product not found");
         }
         
+        // Sprawdź czy produkt nie jest sprzedany (najpierw sprawdź sprzedaż)
+        if self.is_product_sold(product_id) {
+            panic!("Cannot deactivate sold product");
+        }
+        
         // Sprawdź czy produkt jest aktywny
         if !self.is_product_active(product_id) {
             panic!("Product not active");
-        }
-        
-        // Sprawdź czy produkt nie jest sprzedany
-        if self.is_product_sold(product_id) {
-            panic!("Cannot withdraw sold product");
         }
         
         // Sprawdź czy wywołujący to admin kampanii
@@ -1039,8 +1043,8 @@ impl Donly {
         true
     }
     
-    /// Sprawdza czy produkt może być usunięty (aktywny i nie sprzedany)
-    pub fn can_withdraw_product(&self, product_id: U256) -> bool {
+    /// Sprawdza czy produkt może być dezaktywowany (aktywny i nie sprzedany)
+    pub fn can_deactivate_product(&self, product_id: U256) -> bool {
         self.is_product_active(product_id) && !self.is_product_sold(product_id)
     }
 }
@@ -1804,84 +1808,6 @@ mod test {
         assert!(!contract.is_product_owner(product_id, Address::from([1u8; 20])));
     }
     
-    #[test]
-    fn test_deactivate_product_by_owner() {
-        use stylus_sdk::testing::*;
-        let vm = TestVM::default();
-        let mut contract = Donly::from(&vm);
-
-        // Utwórz kategorię i kampanię
-        let category_id = contract.create_category("Electronics".to_string());
-        let campaign_id = contract.create_campaign(
-            category_id,
-            "Test Campaign".to_string(),
-            "Test Description".to_string(),
-            "https://example.com/test.jpg".to_string(),
-            Address::ZERO,
-            U256::from(100)
-        );
-        
-        // Dodaj produkt
-        let product_id = contract.add_product(
-            "Test Product".to_string(),
-            "Test Product Description".to_string(),
-            "https://example.com/product.jpg".to_string(),
-            U256::from(1000),
-            campaign_id,
-            category_id
-        );
-        
-        // Sprawdź czy produkt jest aktywny
-        assert!(contract.is_product_active(product_id));
-        
-        // Dezaktywuj produkt przez właściciela
-        let result = contract.deactivate_product(product_id);
-        assert!(result);
-        
-        // Sprawdź czy produkt został dezaktywowany
-        assert!(!contract.is_product_active(product_id));
-    }
-    
-    #[test]
-    fn test_deactivate_product_by_admin() {
-        use stylus_sdk::testing::*;
-        let vm = TestVM::default();
-        let mut contract = Donly::from(&vm);
-
-        // Utwórz kategorię i kampanię
-        let category_id = contract.create_category("Electronics".to_string());
-        let campaign_id = contract.create_campaign(
-            category_id,
-            "Test Campaign".to_string(),
-            "Test Description".to_string(),
-            "https://example.com/test.jpg".to_string(),
-            Address::ZERO,
-            U256::from(100)
-        );
-        
-        // Dodaj produkt
-        let product_id = contract.add_product(
-            "Test Product".to_string(),
-            "Test Product Description".to_string(),
-            "https://example.com/product.jpg".to_string(),
-            U256::from(1000),
-            campaign_id,
-            category_id
-        );
-        
-        // Sprawdź czy produkt jest aktywny
-        assert!(contract.is_product_active(product_id));
-        
-        // Sprawdź dane kampanii
-        let (_, _, _, _, admin, _, _, _, _, _, _, _, _) = contract.get_campaign_data(campaign_id);
-        
-        // Dezaktywuj produkt przez admina (w testach msg_sender() to admin)
-        let result = contract.deactivate_product(product_id);
-        assert!(result);
-        
-        // Sprawdź czy produkt został dezaktywowany
-        assert!(!contract.is_product_active(product_id));
-    }
     
     #[test]
     #[should_panic(expected = "Product not active")]
@@ -1926,7 +1852,7 @@ mod test {
         contract.purchase_product(product_id);
         
         // Próba dezaktywacji sprzedanego produktu
-        contract.deactivate_product(product_id);
+        contract.deactivate_product_by_owner(product_id);
     }
     
     #[test]
@@ -2133,10 +2059,10 @@ mod test {
         contract.purchase_product(product2_id);
     }
     
-    // ===== PRODUCT WITHDRAWAL TESTS =====
+    // ===== PRODUCT DEACTIVATION TESTS =====
     
     #[test]
-    fn test_withdraw_product_by_owner() {
+    fn test_deactivate_product_by_owner() {
         use stylus_sdk::testing::*;
         let vm = TestVM::default();
         let mut contract = Donly::from(&vm);
@@ -2164,19 +2090,19 @@ mod test {
         
         // Sprawdź że produkt jest aktywny
         assert!(contract.is_product_active(product_id));
-        assert!(contract.can_withdraw_product(product_id));
+        assert!(contract.can_deactivate_product(product_id));
         
-        // Usuń produkt przez właściciela
-        let result = contract.withdraw_product(product_id);
+        // Dezaktywuj produkt przez właściciela
+        let result = contract.deactivate_product_by_owner(product_id);
         assert!(result);
         
         // Sprawdź że produkt jest nieaktywny
         assert!(!contract.is_product_active(product_id));
-        assert!(!contract.can_withdraw_product(product_id));
+        assert!(!contract.can_deactivate_product(product_id));
     }
     
     #[test]
-    fn test_withdraw_product_by_admin() {
+    fn test_deactivate_product_by_admin() {
         use stylus_sdk::testing::*;
         let vm = TestVM::default();
         let mut contract = Donly::from(&vm);
@@ -2205,20 +2131,20 @@ mod test {
         
         // Sprawdź że produkt jest aktywny
         assert!(contract.is_product_active(product_id));
-        assert!(contract.can_withdraw_product(product_id));
+        assert!(contract.can_deactivate_product(product_id));
         
-        // Usuń produkt przez admina kampanii
-        let result = contract.withdraw_product_by_admin(product_id);
+        // Dezaktywuj produkt przez admina kampanii
+        let result = contract.deactivate_product_by_admin(product_id);
         assert!(result);
         
         // Sprawdź że produkt jest nieaktywny
         assert!(!contract.is_product_active(product_id));
-        assert!(!contract.can_withdraw_product(product_id));
+        assert!(!contract.can_deactivate_product(product_id));
     }
     
     #[test]
-    #[should_panic(expected = "Cannot withdraw sold product")]
-    fn test_cannot_withdraw_sold_product() {
+    #[should_panic(expected = "Cannot deactivate sold product")]
+    fn test_cannot_deactivate_sold_product() {
         use stylus_sdk::testing::*;
         let vm = TestVM::default();
         let mut contract = Donly::from(&vm);
@@ -2248,15 +2174,15 @@ mod test {
         
         // Sprawdź że produkt jest sprzedany
         assert!(contract.is_product_sold(product_id));
-        assert!(!contract.can_withdraw_product(product_id));
+        assert!(!contract.can_deactivate_product(product_id));
         
-        // Próba usunięcia sprzedanego produktu powinna panic
-        contract.withdraw_product(product_id);
+        // Próba dezaktywacji sprzedanego produktu powinna panic
+        contract.deactivate_product_by_owner(product_id);
     }
     
     #[test]
     #[should_panic(expected = "Product not active")]
-    fn test_cannot_withdraw_inactive_product() {
+    fn test_cannot_deactivate_inactive_product() {
         use stylus_sdk::testing::*;
         let vm = TestVM::default();
         let mut contract = Donly::from(&vm);
@@ -2282,20 +2208,20 @@ mod test {
             category_id
         );
         
-        // Usuń produkt
-        contract.withdraw_product(product_id);
+        // Dezaktywuj produkt
+        contract.deactivate_product_by_owner(product_id);
         
-        // Próba ponownego usunięcia powinna panic
-        contract.withdraw_product(product_id);
+        // Próba ponownej dezaktywacji powinna panic
+        contract.deactivate_product_by_owner(product_id);
     }
     
     #[test]
-    fn test_withdraw_product_authorization() {
+    fn test_product_lifecycle_sold_never_changes() {
         use stylus_sdk::testing::*;
         let vm = TestVM::default();
         let mut contract = Donly::from(&vm);
 
-        // Utwórz kategorię i kampanię
+        // Utwórz kategorię i kampanię z max_sold_products = 1
         let category_id = contract.create_category("Electronics".to_string());
         let campaign_id = contract.create_campaign(
             category_id,
@@ -2303,61 +2229,45 @@ mod test {
             "Test Description".to_string(),
             "https://example.com/test.jpg".to_string(),
             Address::ZERO,
-            U256::from(10)
+            U256::from(1) // Tylko 1 produkt
         );
         
-        // Dodaj produkt
-        let product_id = contract.add_product(
-            "Test Product".to_string(),
-            "Test Description".to_string(),
-            "https://example.com/test.jpg".to_string(),
+        // Dodaj 2 produkty
+        let product1_id = contract.add_product(
+            "Product 1".to_string(),
+            "Description 1".to_string(),
+            "https://example.com/product1.jpg".to_string(),
             U256::from(1000),
             campaign_id,
             category_id
         );
         
-        // Sprawdź że właściciel może usunąć produkt
-        let result = contract.withdraw_product(product_id);
-        assert!(result);
-        
-        // Sprawdź że produkt jest nieaktywny
-        assert!(!contract.is_product_active(product_id));
-    }
-    
-    #[test]
-    fn test_withdraw_product_by_admin_authorization() {
-        use stylus_sdk::testing::*;
-        let vm = TestVM::default();
-        let mut contract = Donly::from(&vm);
-
-        // Utwórz kategorię i kampanię z adminem
-        let category_id = contract.create_category("Electronics".to_string());
-        let admin = Address::from([1u8; 20]);
-        let campaign_id = contract.create_campaign(
-            category_id,
-            "Test Campaign".to_string(),
-            "Test Description".to_string(),
-            "https://example.com/test.jpg".to_string(),
-            admin,
-            U256::from(10)
-        );
-        
-        // Dodaj produkt
-        let product_id = contract.add_product(
-            "Test Product".to_string(),
-            "Test Description".to_string(),
-            "https://example.com/test.jpg".to_string(),
+        let product2_id = contract.add_product(
+            "Product 2".to_string(),
+            "Description 2".to_string(),
+            "https://example.com/product2.jpg".to_string(),
             U256::from(1000),
             campaign_id,
             category_id
         );
         
-        // Sprawdź że admin może usunąć produkt
-        // (w testach msg_sender() zwraca domyślny adres, który jest adminem)
-        let result = contract.withdraw_product_by_admin(product_id);
-        assert!(result);
+        // Kup pierwszy produkt - to zakończy kampanię
+        contract.purchase_product(product1_id);
         
-        // Sprawdź że produkt jest nieaktywny
-        assert!(!contract.is_product_active(product_id));
+        // Sprawdź że pierwszy produkt jest sprzedany
+        assert!(contract.is_product_sold(product1_id));
+        assert!(!contract.can_deactivate_product(product1_id));
+        
+        // Sprawdź że drugi produkt został automatycznie dezaktywowany
+        assert!(!contract.is_product_active(product2_id));
+        assert!(!contract.can_deactivate_product(product2_id));
+        
+        // Sprawdź że kampania jest zakończona
+        assert!(!contract.is_campaign_active(campaign_id));
+        assert_eq!(contract.get_campaign_status(campaign_id), U256::from(CampaignStatus::Completed as u8));
+        
+        // WAŻNE: Sprzedany produkt pozostaje sprzedany nawet po zakończeniu kampanii
+        assert!(contract.is_product_sold(product1_id));
+        assert!(!contract.is_product_active(product1_id));
     }
 }
