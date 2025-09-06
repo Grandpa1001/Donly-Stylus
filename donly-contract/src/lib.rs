@@ -964,6 +964,85 @@ impl Donly {
             Address::ZERO
         }
     }
+    
+    /// Usuwa produkt (dezaktywuje) - tylko przez właściciela
+    pub fn withdraw_product(&mut self, product_id: U256) -> bool {
+        // Sprawdź czy produkt istnieje
+        if product_id < U256::from(1) || product_id > U256::from(3) {
+            panic!("Product not found");
+        }
+        
+        // Sprawdź czy produkt jest aktywny
+        if !self.is_product_active(product_id) {
+            panic!("Product not active");
+        }
+        
+        // Sprawdź czy produkt nie jest sprzedany
+        if self.is_product_sold(product_id) {
+            panic!("Cannot withdraw sold product");
+        }
+        
+        // Sprawdź czy wywołujący to właściciel
+        let caller = self.vm().msg_sender();
+        let owner = self.get_product_owner(product_id);
+        
+        if caller != owner {
+            panic!("Unauthorized: not product owner");
+        }
+        
+        // Dezaktywuj produkt
+        if product_id == U256::from(1) {
+            self.product1_is_active.set(false);
+        } else if product_id == U256::from(2) {
+            self.product2_is_active.set(false);
+        } else if product_id == U256::from(3) {
+            self.product3_is_active.set(false);
+        }
+        
+        true
+    }
+    
+    /// Usuwa produkt (dezaktywuje) - przez admina kampanii
+    pub fn withdraw_product_by_admin(&mut self, product_id: U256) -> bool {
+        // Sprawdź czy produkt istnieje
+        if product_id < U256::from(1) || product_id > U256::from(3) {
+            panic!("Product not found");
+        }
+        
+        // Sprawdź czy produkt jest aktywny
+        if !self.is_product_active(product_id) {
+            panic!("Product not active");
+        }
+        
+        // Sprawdź czy produkt nie jest sprzedany
+        if self.is_product_sold(product_id) {
+            panic!("Cannot withdraw sold product");
+        }
+        
+        // Sprawdź czy wywołujący to admin kampanii
+        let caller = self.vm().msg_sender();
+        let (_, _, _, _, _, _, _, _, campaign_id, _, _) = self.get_product_data(product_id);
+        
+        if !self.is_campaign_admin(campaign_id, caller) {
+            panic!("Unauthorized: not campaign admin");
+        }
+        
+        // Dezaktywuj produkt
+        if product_id == U256::from(1) {
+            self.product1_is_active.set(false);
+        } else if product_id == U256::from(2) {
+            self.product2_is_active.set(false);
+        } else if product_id == U256::from(3) {
+            self.product3_is_active.set(false);
+        }
+        
+        true
+    }
+    
+    /// Sprawdza czy produkt może być usunięty (aktywny i nie sprzedany)
+    pub fn can_withdraw_product(&self, product_id: U256) -> bool {
+        self.is_product_active(product_id) && !self.is_product_sold(product_id)
+    }
 }
 
 #[cfg(test)]
@@ -2052,5 +2131,233 @@ mod test {
         
         // Próba zakupu dezaktywowanego produktu powinna panic
         contract.purchase_product(product2_id);
+    }
+    
+    // ===== PRODUCT WITHDRAWAL TESTS =====
+    
+    #[test]
+    fn test_withdraw_product_by_owner() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(10)
+        );
+        
+        // Dodaj produkt
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        // Sprawdź że produkt jest aktywny
+        assert!(contract.is_product_active(product_id));
+        assert!(contract.can_withdraw_product(product_id));
+        
+        // Usuń produkt przez właściciela
+        let result = contract.withdraw_product(product_id);
+        assert!(result);
+        
+        // Sprawdź że produkt jest nieaktywny
+        assert!(!contract.is_product_active(product_id));
+        assert!(!contract.can_withdraw_product(product_id));
+    }
+    
+    #[test]
+    fn test_withdraw_product_by_admin() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię z adminem
+        let category_id = contract.create_category("Electronics".to_string());
+        let admin = Address::from([1u8; 20]);
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            admin,
+            U256::from(10)
+        );
+        
+        // Dodaj produkt przez innego użytkownika
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        // Sprawdź że produkt jest aktywny
+        assert!(contract.is_product_active(product_id));
+        assert!(contract.can_withdraw_product(product_id));
+        
+        // Usuń produkt przez admina kampanii
+        let result = contract.withdraw_product_by_admin(product_id);
+        assert!(result);
+        
+        // Sprawdź że produkt jest nieaktywny
+        assert!(!contract.is_product_active(product_id));
+        assert!(!contract.can_withdraw_product(product_id));
+    }
+    
+    #[test]
+    #[should_panic(expected = "Cannot withdraw sold product")]
+    fn test_cannot_withdraw_sold_product() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(10)
+        );
+        
+        // Dodaj i kup produkt
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        contract.purchase_product(product_id);
+        
+        // Sprawdź że produkt jest sprzedany
+        assert!(contract.is_product_sold(product_id));
+        assert!(!contract.can_withdraw_product(product_id));
+        
+        // Próba usunięcia sprzedanego produktu powinna panic
+        contract.withdraw_product(product_id);
+    }
+    
+    #[test]
+    #[should_panic(expected = "Product not active")]
+    fn test_cannot_withdraw_inactive_product() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(10)
+        );
+        
+        // Dodaj produkt
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        // Usuń produkt
+        contract.withdraw_product(product_id);
+        
+        // Próba ponownego usunięcia powinna panic
+        contract.withdraw_product(product_id);
+    }
+    
+    #[test]
+    fn test_withdraw_product_authorization() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(10)
+        );
+        
+        // Dodaj produkt
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        // Sprawdź że właściciel może usunąć produkt
+        let result = contract.withdraw_product(product_id);
+        assert!(result);
+        
+        // Sprawdź że produkt jest nieaktywny
+        assert!(!contract.is_product_active(product_id));
+    }
+    
+    #[test]
+    fn test_withdraw_product_by_admin_authorization() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię z adminem
+        let category_id = contract.create_category("Electronics".to_string());
+        let admin = Address::from([1u8; 20]);
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            admin,
+            U256::from(10)
+        );
+        
+        // Dodaj produkt
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        // Sprawdź że admin może usunąć produkt
+        // (w testach msg_sender() zwraca domyślny adres, który jest adminem)
+        let result = contract.withdraw_product_by_admin(product_id);
+        assert!(result);
+        
+        // Sprawdź że produkt jest nieaktywny
+        assert!(!contract.is_product_active(product_id));
     }
 }
