@@ -1,55 +1,61 @@
 # Donly - Crowdfunding Platform on Arbitrum Stylus
 
-Migracja platformy crowdfundingowej Donly z Solana na Arbitrum Stylus.
+Platforma crowdfundingowa zbudowana na Arbitrum Stylus z wykorzystaniem Rust.
 
-## 🏗️ Struktura projektu
+## Struktura projektu
 
 ```
 Donly-Stylus/
-├── donly-contract/          # Smart contract (Rust)
-├── donly-frontend/          # Frontend (Next.js/React)
+├── donly-contract/     # Smart contract w Rust (Arbitrum Stylus)
+├── donly-frontend/     # Frontend w React/Next.js
 └── README.md
 ```
 
-## 🚀 Smart Contract
+## Funkcjonalności
 
-### Funkcjonalności:
-- ✅ **Kategorie** (3 sloty) - tworzenie, dezaktywacja
-- ✅ **Kampanie** (3 sloty) - pełna funkcjonalność z Solana
-- ✅ **Status kampanii** - Active, Completed, Cancelled
-- ✅ **Walidacja** - kategorie muszą istnieć i być aktywne
+- **Kampanie crowdfundingowe** - tworzenie i zarządzanie kampaniami
+- **Produkty** - dodawanie produktów do kampanii
+- **Kategorie** - klasyfikacja produktów
+- **Zakupy** - system płatności i zakupów
+- **Zarządzanie** - dezaktywacja i zamykanie kampanii
 
-### Testy:
+## Technologie
+
+### Backend (Smart Contract)
+- **Rust** - język programowania
+- **Arbitrum Stylus** - platforma wykonawcza
+- **Stylus SDK** - SDK dla smart kontraktów
+
+### Frontend
+- **Next.js 14** - framework React
+- **TypeScript** - typowanie statyczne
+- **Tailwind CSS** - stylowanie
+- **Wagmi** - integracja z Ethereum
+- **RainbowKit** - UI dla portfeli
+- **React Query** - zarządzanie stanem
+
+## Rozpoczęcie pracy
+
+### Smart Contract
 ```bash
 cd donly-contract
-cargo test
+cargo stylus build
+cargo stylus test
 ```
 
-## 🌐 Frontend
-
-### Technologie:
-- Next.js 14
-- React 18
-- TypeScript
-- Tailwind CSS
-- Web3 (ethers.js, wagmi, viem)
-
-### Uruchomienie:
+### Frontend
 ```bash
 cd donly-frontend
-npm install
 npm run dev
 ```
 
-## 📋 TODO
+## Status rozwoju
 
-- [ ] Dodanie produktów
-- [ ] Metody zarządzania kampaniami (complete, cancel)
-- [ ] Płatności i zbieranie środków
-- [ ] Integracja frontend z smart contractem
+- [x] Utworzenie projektu Stylus
+- [x] Konfiguracja frontendu React
+- [x] Implementacja struktur danych
+- [x] Implementacja logiki biznesowej
+- [ ] Integracja frontend-backend
+- [ ] Testy i optymalizacja
 
-## 🔧 Wymagania
 
-- Rust 1.70+
-- Node.js 18+
-- cargo-stylus

@@ -1,8 +1,8 @@
 ![Image](./header.png)
 
-# Stylus Hello World
+# Donly Smart Contract
 
-Project starter template for writing Arbitrum Stylus programs in Rust using the [stylus-sdk](https://github.com/OffchainLabs/stylus-sdk-rs). It includes a Rust implementation of a basic counter Ethereum smart contract:
+Smart contract dla platformy crowdfundingowej Donly zbudowany na Arbitrum Stylus z wykorzystaniem Rust i [stylus-sdk](https://github.com/OffchainLabs/stylus-sdk-rs). Zawiera implementację platformy crowdfundingowej z kampaniami i kategoriami:
 
 ```js
 // SPDX-License-Identifier: UNLICENSED

@@ -1,8 +1,8 @@
 //!
 //! Donly - Crowdfunding Platform on Arbitrum Stylus
 //!
-//! Migracja z Solana Anchor na Arbitrum Stylus
 //! Platforma crowdfundingowa z kampaniami, produktami i kategoriami
+//! Zbudowana na Arbitrum Stylus z wykorzystaniem Rust
 //!
 
 // Allow `cargo stylus export-abi` to generate a main function.
@@ -18,7 +18,7 @@ use alloc::string::{String, ToString};
 /// Import items from the SDK. The prelude contains common traits and macros.
 use stylus_sdk::{alloy_primitives::{U256, Address}, prelude::*};
 
-// Status kampanii - migracja z Solana
+// Status kampanii
 #[derive(PartialEq, Eq)]
 pub enum CampaignStatus {
     Active = 0,
