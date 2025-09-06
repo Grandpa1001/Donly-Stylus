@@ -13,7 +13,7 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
-use alloc::string::{String, ToString};
+use alloc::string::String;
 
 /// Import items from the SDK. The prelude contains common traits and macros.
 use stylus_sdk::{alloy_primitives::{U256, Address}, prelude::*};
@@ -92,6 +92,48 @@ sol_storage! {
         uint256 campaign3_status;
         uint256 campaign3_created_at;
         uint256 campaign3_completed_at;
+        
+        // Product functionality - 3 produkty
+        uint256 product_count;
+        
+        // Product 1
+        uint256 product1_name_hash;
+        uint256 product1_description_hash;
+        uint256 product1_image_url_hash;
+        uint256 product1_price;
+        bool product1_is_active;
+        bool product1_is_sold;
+        address product1_owner;
+        uint256 product1_campaign_id;
+        uint256 product1_category_id;
+        uint256 product1_created_at;
+        uint256 product1_sold_at; // 0 = None
+        
+        // Product 2
+        uint256 product2_name_hash;
+        uint256 product2_description_hash;
+        uint256 product2_image_url_hash;
+        uint256 product2_price;
+        bool product2_is_active;
+        bool product2_is_sold;
+        address product2_owner;
+        uint256 product2_campaign_id;
+        uint256 product2_category_id;
+        uint256 product2_created_at;
+        uint256 product2_sold_at;
+        
+        // Product 3
+        uint256 product3_name_hash;
+        uint256 product3_description_hash;
+        uint256 product3_image_url_hash;
+        uint256 product3_price;
+        bool product3_is_active;
+        bool product3_is_sold;
+        address product3_owner;
+        uint256 product3_campaign_id;
+        uint256 product3_category_id;
+        uint256 product3_created_at;
+        uint256 product3_sold_at;
     }
 }
 
@@ -426,6 +468,259 @@ impl Donly {
             U256::ZERO
         }
     }
+    
+    // ===== PRODUCT FUNCTIONALITY =====
+    
+    /// Pobiera liczbę produktów
+    pub fn get_product_count(&self) -> U256 {
+        self.product_count.get()
+    }
+    
+    /// Tworzy nowy produkt
+    pub fn add_product(
+        &mut self,
+        name: String,
+        description: String,
+        image_url: String,
+        price: U256,
+        campaign_id: U256,
+        category_id: U256,
+    ) -> U256 {
+        // Walidacja parametrów
+        if price == U256::ZERO {
+            panic!("Price must be greater than 0");
+        }
+        if name.len() > 64 {
+            panic!("Name too long (max 64 characters)");
+        }
+        if description.len() > 256 {
+            panic!("Description too long (max 256 characters)");
+        }
+        if image_url.len() > 128 {
+            panic!("Image URL too long (max 128 characters)");
+        }
+        
+        // Sprawdź czy kampania istnieje i jest aktywna
+        if !self.is_campaign_active(campaign_id) {
+            panic!("Campaign not active");
+        }
+        
+        // Sprawdź czy kategoria istnieje i jest aktywna
+        if !self.is_category_active(category_id) {
+            panic!("Category not active");
+        }
+        
+        let current_count = self.product_count.get();
+        if current_count >= U256::from(3) {
+            panic!("Maximum products reached");
+        }
+        
+        let new_product_id = current_count + U256::from(1);
+        let owner = self.vm().msg_sender();
+        let created_at = U256::from(self.vm().block_timestamp());
+        
+        // Hash dla stringów
+        let name_hash = U256::from_be_bytes(self.vm().native_keccak256(name.as_bytes()).into());
+        let description_hash = U256::from_be_bytes(self.vm().native_keccak256(description.as_bytes()).into());
+        let image_url_hash = U256::from_be_bytes(self.vm().native_keccak256(image_url.as_bytes()).into());
+        
+        if new_product_id == U256::from(1) {
+            self.product1_name_hash.set(name_hash);
+            self.product1_description_hash.set(description_hash);
+            self.product1_image_url_hash.set(image_url_hash);
+            self.product1_price.set(price);
+            self.product1_is_active.set(true);
+            self.product1_is_sold.set(false);
+            self.product1_owner.set(owner);
+            self.product1_campaign_id.set(campaign_id);
+            self.product1_category_id.set(category_id);
+            self.product1_created_at.set(created_at);
+            self.product1_sold_at.set(U256::ZERO);
+        } else if new_product_id == U256::from(2) {
+            self.product2_name_hash.set(name_hash);
+            self.product2_description_hash.set(description_hash);
+            self.product2_image_url_hash.set(image_url_hash);
+            self.product2_price.set(price);
+            self.product2_is_active.set(true);
+            self.product2_is_sold.set(false);
+            self.product2_owner.set(owner);
+            self.product2_campaign_id.set(campaign_id);
+            self.product2_category_id.set(category_id);
+            self.product2_created_at.set(created_at);
+            self.product2_sold_at.set(U256::ZERO);
+        } else if new_product_id == U256::from(3) {
+            self.product3_name_hash.set(name_hash);
+            self.product3_description_hash.set(description_hash);
+            self.product3_image_url_hash.set(image_url_hash);
+            self.product3_price.set(price);
+            self.product3_is_active.set(true);
+            self.product3_is_sold.set(false);
+            self.product3_owner.set(owner);
+            self.product3_campaign_id.set(campaign_id);
+            self.product3_category_id.set(category_id);
+            self.product3_created_at.set(created_at);
+            self.product3_sold_at.set(U256::ZERO);
+        }
+        
+        self.product_count.set(new_product_id);
+        new_product_id
+    }
+    
+    /// Pobiera dane produktu
+    pub fn get_product_data(&self, product_id: U256) -> (U256, U256, U256, U256, bool, bool, Address, U256, U256, U256, U256) {
+        if product_id == U256::from(1) {
+            (
+                self.product1_name_hash.get(),
+                self.product1_description_hash.get(),
+                self.product1_image_url_hash.get(),
+                self.product1_price.get(),
+                self.product1_is_active.get(),
+                self.product1_is_sold.get(),
+                self.product1_owner.get(),
+                self.product1_campaign_id.get(),
+                self.product1_category_id.get(),
+                self.product1_created_at.get(),
+                self.product1_sold_at.get()
+            )
+        } else if product_id == U256::from(2) {
+            (
+                self.product2_name_hash.get(),
+                self.product2_description_hash.get(),
+                self.product2_image_url_hash.get(),
+                self.product2_price.get(),
+                self.product2_is_active.get(),
+                self.product2_is_sold.get(),
+                self.product2_owner.get(),
+                self.product2_campaign_id.get(),
+                self.product2_category_id.get(),
+                self.product2_created_at.get(),
+                self.product2_sold_at.get()
+            )
+        } else if product_id == U256::from(3) {
+            (
+                self.product3_name_hash.get(),
+                self.product3_description_hash.get(),
+                self.product3_image_url_hash.get(),
+                self.product3_price.get(),
+                self.product3_is_active.get(),
+                self.product3_is_sold.get(),
+                self.product3_owner.get(),
+                self.product3_campaign_id.get(),
+                self.product3_category_id.get(),
+                self.product3_created_at.get(),
+                self.product3_sold_at.get()
+            )
+        } else {
+            (U256::ZERO, U256::ZERO, U256::ZERO, U256::ZERO, false, false, Address::ZERO, U256::ZERO, U256::ZERO, U256::ZERO, U256::ZERO)
+        }
+    }
+    
+    /// Sprawdza czy produkt jest aktywny
+    pub fn is_product_active(&self, product_id: U256) -> bool {
+        if product_id == U256::from(1) {
+            self.product1_is_active.get()
+        } else if product_id == U256::from(2) {
+            self.product2_is_active.get()
+        } else if product_id == U256::from(3) {
+            self.product3_is_active.get()
+        } else {
+            false
+        }
+    }
+    
+    /// Sprawdza czy produkt jest sprzedany
+    pub fn is_product_sold(&self, product_id: U256) -> bool {
+        if product_id == U256::from(1) {
+            self.product1_is_sold.get()
+        } else if product_id == U256::from(2) {
+            self.product2_is_sold.get()
+        } else if product_id == U256::from(3) {
+            self.product3_is_sold.get()
+        } else {
+            false
+        }
+    }
+    
+    /// Kupuje produkt
+    pub fn purchase_product(&mut self, product_id: U256) -> bool {
+        // Sprawdź czy produkt istnieje i jest aktywny
+        if !self.is_product_active(product_id) {
+            panic!("Product not active");
+        }
+        
+        if self.is_product_sold(product_id) {
+            panic!("Product already sold");
+        }
+        
+        // Pobierz dane produktu
+        let (_, _, _, price, _, _, _, campaign_id, _, _, _) = self.get_product_data(product_id);
+        
+        // Sprawdź czy kampania jest aktywna
+        if !self.is_campaign_active(campaign_id) {
+            panic!("Campaign not active");
+        }
+        
+        // Oznacz produkt jako sprzedany
+        let sold_at = U256::from(self.vm().block_timestamp());
+        
+        if product_id == U256::from(1) {
+            self.product1_is_sold.set(true);
+            self.product1_sold_at.set(sold_at);
+        } else if product_id == U256::from(2) {
+            self.product2_is_sold.set(true);
+            self.product2_sold_at.set(sold_at);
+        } else if product_id == U256::from(3) {
+            self.product3_is_sold.set(true);
+            self.product3_sold_at.set(sold_at);
+        }
+        
+        // Aktualizuj statystyki kampanii
+        self.update_campaign_stats(campaign_id, price);
+        
+        true
+    }
+    
+    /// Aktualizuje statystyki kampanii po sprzedaży produktu
+    fn update_campaign_stats(&mut self, campaign_id: U256, price: U256) {
+        if campaign_id == U256::from(1) {
+            let new_sold_count = self.campaign1_sold_products_count.get() + U256::from(1);
+            let new_total_amount = self.campaign1_total_amount_collected.get() + price;
+            
+            self.campaign1_sold_products_count.set(new_sold_count);
+            self.campaign1_total_amount_collected.set(new_total_amount);
+            
+            // Sprawdź czy kampania została ukończona
+            if new_sold_count >= self.campaign1_max_sold_products.get() {
+                self.campaign1_status.set(U256::from(CampaignStatus::Completed as u8));
+                self.campaign1_is_active.set(false);
+                self.campaign1_completed_at.set(U256::from(self.vm().block_timestamp()));
+            }
+        } else if campaign_id == U256::from(2) {
+            let new_sold_count = self.campaign2_sold_products_count.get() + U256::from(1);
+            let new_total_amount = self.campaign2_total_amount_collected.get() + price;
+            
+            self.campaign2_sold_products_count.set(new_sold_count);
+            self.campaign2_total_amount_collected.set(new_total_amount);
+            
+            if new_sold_count >= self.campaign2_max_sold_products.get() {
+                self.campaign2_status.set(U256::from(CampaignStatus::Completed as u8));
+                self.campaign2_is_active.set(false);
+                self.campaign2_completed_at.set(U256::from(self.vm().block_timestamp()));
+            }
+        } else if campaign_id == U256::from(3) {
+            let new_sold_count = self.campaign3_sold_products_count.get() + U256::from(1);
+            let new_total_amount = self.campaign3_total_amount_collected.get() + price;
+            
+            self.campaign3_sold_products_count.set(new_sold_count);
+            self.campaign3_total_amount_collected.set(new_total_amount);
+            
+            if new_sold_count >= self.campaign3_max_sold_products.get() {
+                self.campaign3_status.set(U256::from(CampaignStatus::Completed as u8));
+                self.campaign3_is_active.set(false);
+                self.campaign3_completed_at.set(U256::from(self.vm().block_timestamp()));
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -615,5 +910,306 @@ mod test {
             Address::ZERO,
             U256::from(100)
         );
+    }
+    
+    // ===== PRODUCT TESTS =====
+    
+    #[test]
+    fn test_get_product_count() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let contract = Donly::from(&vm);
+
+        // Sprawdź czy początkowo liczba produktów to 0
+        assert_eq!(contract.get_product_count(), U256::ZERO);
+    }
+    
+    #[test]
+    fn test_add_product() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(100)
+        );
+        
+        // Dodaj produkt
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Product Description".to_string(),
+            "https://example.com/product.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        // Sprawdź czy produkt został utworzony
+        assert_eq!(product_id, U256::from(1));
+        assert_eq!(contract.get_product_count(), U256::from(1));
+        assert!(contract.is_product_active(product_id));
+        assert!(!contract.is_product_sold(product_id));
+    }
+    
+    #[test]
+    fn test_get_product_data() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(100)
+        );
+        
+        // Dodaj produkt
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Product Description".to_string(),
+            "https://example.com/product.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        // Pobierz dane produktu
+        let (name_hash, description_hash, image_url_hash, price, is_active, is_sold, owner, campaign_id_result, category_id_result, created_at, sold_at) = 
+            contract.get_product_data(product_id);
+        
+        // Sprawdź dane
+        assert!(name_hash != U256::ZERO);
+        assert!(description_hash != U256::ZERO);
+        assert!(image_url_hash != U256::ZERO);
+        assert_eq!(price, U256::from(1000));
+        assert!(is_active);
+        assert!(!is_sold);
+        assert_eq!(campaign_id_result, campaign_id);
+        assert_eq!(category_id_result, category_id);
+        assert!(created_at >= U256::ZERO);
+        assert_eq!(sold_at, U256::ZERO);
+    }
+    
+    #[test]
+    #[should_panic(expected = "Price must be greater than 0")]
+    fn test_add_product_zero_price() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(100)
+        );
+        
+        // Próba dodania produktu z ceną 0
+        contract.add_product(
+            "Test Product".to_string(),
+            "Test Product Description".to_string(),
+            "https://example.com/product.jpg".to_string(),
+            U256::ZERO,
+            campaign_id,
+            category_id
+        );
+    }
+    
+    #[test]
+    #[should_panic(expected = "Campaign not active")]
+    fn test_add_product_inactive_campaign() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię
+        let category_id = contract.create_category("Electronics".to_string());
+        
+        // Próba dodania produktu do nieistniejącej kampanii
+        contract.add_product(
+            "Test Product".to_string(),
+            "Test Product Description".to_string(),
+            "https://example.com/product.jpg".to_string(),
+            U256::from(1000),
+            U256::from(999), // nieistniejąca kampania
+            category_id
+        );
+    }
+    
+    #[test]
+    #[should_panic(expected = "Category not active")]
+    fn test_add_product_inactive_category() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(100)
+        );
+        
+        // Dezaktywuj kategorię
+        contract.deactivate_category(category_id);
+        
+        // Próba dodania produktu w nieaktywnej kategorii
+        contract.add_product(
+            "Test Product".to_string(),
+            "Test Product Description".to_string(),
+            "https://example.com/product.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+    }
+    
+    #[test]
+    fn test_purchase_product() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(100)
+        );
+        
+        // Dodaj produkt
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Product Description".to_string(),
+            "https://example.com/product.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        // Sprawdź początkowy stan
+        assert!(!contract.is_product_sold(product_id));
+        assert_eq!(contract.campaign1_sold_products_count.get(), U256::ZERO);
+        assert_eq!(contract.campaign1_total_amount_collected.get(), U256::ZERO);
+        
+        // Kup produkt
+        let result = contract.purchase_product(product_id);
+        assert!(result);
+        
+        // Sprawdź czy produkt został sprzedany
+        assert!(contract.is_product_sold(product_id));
+        
+        // Sprawdź czy statystyki kampanii zostały zaktualizowane
+        assert_eq!(contract.campaign1_sold_products_count.get(), U256::from(1));
+        assert_eq!(contract.campaign1_total_amount_collected.get(), U256::from(1000));
+    }
+    
+    #[test]
+    fn test_purchase_product_campaign_completion() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię z max_sold_products = 1
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(1) // Tylko 1 produkt
+        );
+        
+        // Dodaj produkt
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Product Description".to_string(),
+            "https://example.com/product.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        // Sprawdź początkowy stan kampanii
+        assert!(contract.is_campaign_active(campaign_id));
+        assert_eq!(contract.get_campaign_status(campaign_id), U256::from(CampaignStatus::Active as u8));
+        
+        // Kup produkt
+        contract.purchase_product(product_id);
+        
+        // Sprawdź czy kampania została ukończona
+        assert!(!contract.is_campaign_active(campaign_id));
+        assert_eq!(contract.get_campaign_status(campaign_id), U256::from(CampaignStatus::Completed as u8));
+    }
+    
+    #[test]
+    #[should_panic(expected = "Product not active")]
+    fn test_purchase_product_inactive() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Próba zakupu nieistniejącego produktu
+        contract.purchase_product(U256::from(999));
+    }
+    
+    #[test]
+    #[should_panic(expected = "Product already sold")]
+    fn test_purchase_product_already_sold() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(100)
+        );
+        
+        // Dodaj produkt
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Product Description".to_string(),
+            "https://example.com/product.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        // Kup produkt pierwszy raz
+        contract.purchase_product(product_id);
+        
+        // Próba zakupu tego samego produktu ponownie
+        contract.purchase_product(product_id);
     }
 }
