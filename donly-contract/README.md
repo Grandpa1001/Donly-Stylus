@@ -1,9 +1,10 @@
 ![Image](./header.png)
 
+![Image](./header.png)
+
 # Donly Smart Contract
 
 Smart contract dla platformy crowdfundingowej Donly zbudowany na Arbitrum Stylus z wykorzystaniem Rust i [stylus-sdk](https://github.com/OffchainLabs/stylus-sdk-rs). Zawiera implementację platformy crowdfundingowej z kampaniami i kategoriami:
-
 ```js
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
