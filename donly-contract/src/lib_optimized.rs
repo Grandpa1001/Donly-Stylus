@@ -1,17 +1,6 @@
-//!
-//! Donly - Crowdfunding Platform on Arbitrum Stylus
-//!
-//! Simple implementation using basic storage types
-//!
-
-// Allow `cargo stylus export-abi` to generate a main function.
-#![cfg_attr(not(any(test, feature = "export-abi")), no_main)]
-
-extern crate alloc;
-
-use alloc::string::String;
 use stylus_sdk::{alloy_primitives::{U256, Address}, prelude::*, msg};
 
+// Define the contract's storage
 sol_storage! {
     #[entrypoint]
     pub struct Donly {
@@ -56,12 +45,10 @@ fn keccak(data: &[u8]) -> U256 {
 impl Donly {
     // ===== CATEGORY FUNCTIONALITY =====
     
-    /// Gets the total number of categories created.
     pub fn category_count(&self) -> U256 {
         self.category_count.get()
     }
 
-    /// Creates a new category.
     pub fn create_category(&mut self, name: String) -> U256 {
         if name.is_empty() || name.len() > 64 {
             panic!("Invalid name");
@@ -83,8 +70,8 @@ impl Donly {
         new_id
     }
 
-    /// Gets a category's name hash by its ID.
-    pub fn get_category_name_hash(&self, id: U256) -> U256 {
+    // Batch function to get all category data
+    pub fn get_category_data(&self, id: U256) -> (U256, Address, bool) {
         if id == U256::ZERO || id > self.category_count.get() {
             panic!("Invalid ID");
         }
@@ -92,59 +79,19 @@ impl Donly {
         if name_hash == U256::ZERO {
             panic!("Category not found");
         }
-        name_hash
-    }
-
-    /// Gets a category's creator by its ID.
-    pub fn get_category_creator(&self, id: U256) -> Address {
-        if id == U256::ZERO || id > self.category_count.get() {
-            panic!("Invalid ID");
-        }
-        let name_hash = self.category_name_hash.get(id);
-        if name_hash == U256::ZERO {
-            panic!("Category not found");
-        }
-        self.category_creator.get(id)
-    }
-
-    /// Gets a category's active status by its ID.
-    pub fn get_category_is_active(&self, id: U256) -> bool {
-        if id == U256::ZERO || id > self.category_count.get() {
-            panic!("Invalid ID");
-        }
-        let name_hash = self.category_name_hash.get(id);
-        if name_hash == U256::ZERO {
-            panic!("Category not found");
-        }
-        self.category_is_active.get(id)
-    }
-
-    /// Deactivates a category. Only the creator can do this.
-    pub fn deactivate_category(&mut self, id: U256) {
-        if id == U256::ZERO || id > self.category_count.get() {
-            panic!("Invalid ID");
-        }
-        
-        let name_hash = self.category_name_hash.get(id);
-        if name_hash == U256::ZERO {
-            panic!("Category not found");
-        }
-
-        if self.category_creator.get(id) != msg::sender() {
-            panic!("Unauthorized");
-        }
-
-        self.category_is_active.setter(id).set(false);
+        (
+            name_hash,
+            self.category_creator.get(id),
+            self.category_is_active.get(id)
+        )
     }
 
     // ===== CAMPAIGN FUNCTIONALITY =====
-
-    /// Gets the total number of campaigns created.
+    
     pub fn campaign_count(&self) -> U256 {
         self.campaign_count.get()
     }
 
-    /// Creates a new campaign.
     pub fn create_campaign(
         &mut self,
         category_id: U256,
@@ -194,8 +141,8 @@ impl Donly {
         new_id
     }
 
-    /// Gets campaign data by ID.
-    pub fn get_campaign_category_id(&self, id: U256) -> U256 {
+    // Batch function to get all campaign data
+    pub fn get_campaign_data(&self, id: U256) -> (U256, Address, bool, U256, U256, Address, U256, U256, U256) {
         if id == U256::ZERO || id > self.campaign_count.get() {
             panic!("Invalid ID");
         }
@@ -203,83 +150,25 @@ impl Donly {
         if category_id == U256::ZERO {
             panic!("Campaign not found");
         }
-        category_id
-    }
-
-    pub fn get_campaign_admin(&self, id: U256) -> Address {
-        if id == U256::ZERO || id > self.campaign_count.get() {
-            panic!("Invalid ID");
-        }
-        let category_id = self.campaign_category_id.get(id);
-        if category_id == U256::ZERO {
-            panic!("Campaign not found");
-        }
-        self.campaign_admin.get(id)
-    }
-
-    pub fn get_campaign_is_active(&self, id: U256) -> bool {
-        if id == U256::ZERO || id > self.campaign_count.get() {
-            panic!("Invalid ID");
-        }
-        let category_id = self.campaign_category_id.get(id);
-        if category_id == U256::ZERO {
-            panic!("Campaign not found");
-        }
-        self.campaign_is_active.get(id)
-    }
-
-    pub fn get_campaign_sold_products_count(&self, id: U256) -> U256 {
-        if id == U256::ZERO || id > self.campaign_count.get() {
-            panic!("Invalid ID");
-        }
-        let category_id = self.campaign_category_id.get(id);
-        if category_id == U256::ZERO {
-            panic!("Campaign not found");
-        }
-        self.campaign_sold_products_count.get(id)
-    }
-
-    pub fn get_campaign_max_sold_products(&self, id: U256) -> U256 {
-        if id == U256::ZERO || id > self.campaign_count.get() {
-            panic!("Invalid ID");
-        }
-        let category_id = self.campaign_category_id.get(id);
-        if category_id == U256::ZERO {
-            panic!("Campaign not found");
-        }
-        self.campaign_max_sold_products.get(id)
-    }
-
-
-    /// Deactivates a campaign. Only the admin can do this.
-    pub fn deactivate_campaign(&mut self, id: U256) {
-        if id == U256::ZERO || id > self.campaign_count.get() {
-            panic!("Invalid ID");
-        }
-        
-        let category_id = self.campaign_category_id.get(id);
-        if category_id == U256::ZERO {
-            panic!("Campaign not found");
-        }
-
-        if self.campaign_admin.get(id) != msg::sender() {
-            panic!("Unauthorized");
-        }
-        if !self.campaign_is_active.get(id) {
-            panic!("Campaign not active");
-        }
-
-        self.campaign_is_active.setter(id).set(false);
+        (
+            category_id,                                    // categoryId
+            self.campaign_admin.get(id),                    // admin
+            self.campaign_is_active.get(id),                // isActive
+            self.campaign_title_hash.get(id),               // titleHash
+            self.campaign_description_hash.get(id),         // descriptionHash
+            self.campaign_destination_wallet.get(id),       // destinationWallet
+            self.campaign_max_sold_products.get(id),        // maxSoldProducts
+            self.campaign_sold_products_count.get(id),      // soldProductsCount
+            self.campaign_total_amount_collected.get(id)    // totalAmountCollected
+        )
     }
 
     // ===== PRODUCT FUNCTIONALITY =====
-
-    /// Gets the total number of products created.
+    
     pub fn product_count(&self) -> U256 {
         self.product_count.get()
     }
-    
-    /// Adds a new product to a campaign.
+
     pub fn add_product(
         &mut self,
         campaign_id: U256,
@@ -342,8 +231,8 @@ impl Donly {
         new_id
     }
 
-    /// Gets product data by ID.
-    pub fn get_product_campaign_id(&self, id: U256) -> U256 {
+    // Batch function to get all product data
+    pub fn get_product_data(&self, id: U256) -> (U256, U256, U256, U256, U256, Address, bool, bool) {
         if id == U256::ZERO || id > self.product_count.get() {
             panic!("Invalid ID");
         }
@@ -351,118 +240,135 @@ impl Donly {
         if campaign_id == U256::ZERO {
             panic!("Product not found");
         }
-        campaign_id
+        (
+            campaign_id,                                    // campaignId
+            self.product_category_id.get(id),               // categoryId
+            self.product_name_hash.get(id),                 // nameHash
+            self.product_description_hash.get(id),          // descriptionHash
+            self.product_price.get(id),                     // price
+            self.product_owner.get(id),                     // owner
+            self.product_is_active.get(id),                 // isActive
+            self.product_is_sold.get(id)                    // isSold
+        )
     }
 
-    pub fn get_product_price(&self, id: U256) -> U256 {
-        if id == U256::ZERO || id > self.product_count.get() {
-            panic!("Invalid ID");
-        }
-        let campaign_id = self.product_campaign_id.get(id);
-        if campaign_id == U256::ZERO {
-            panic!("Product not found");
-        }
-        self.product_price.get(id)
-    }
-
-    pub fn get_product_is_active(&self, id: U256) -> bool {
-        if id == U256::ZERO || id > self.product_count.get() {
-            panic!("Invalid ID");
-        }
-        let campaign_id = self.product_campaign_id.get(id);
-        if campaign_id == U256::ZERO {
-            panic!("Product not found");
-        }
-        self.product_is_active.get(id)
-    }
-
-    pub fn get_product_is_sold(&self, id: U256) -> bool {
-        if id == U256::ZERO || id > self.product_count.get() {
-            panic!("Invalid ID");
-        }
-        let campaign_id = self.product_campaign_id.get(id);
-        if campaign_id == U256::ZERO {
-            panic!("Product not found");
-        }
-        self.product_is_sold.get(id)
-    }
-
-
-    /// Purchases a product. The user must send the exact price in ETH.
+    // ===== PURCHASE FUNCTIONALITY =====
+    
     #[payable]
     pub fn purchase_product(&mut self, product_id: U256) {
         if product_id == U256::ZERO || product_id > self.product_count.get() {
-            panic!("Invalid ID");
+            panic!("Invalid product ID");
         }
         
         let campaign_id = self.product_campaign_id.get(product_id);
         if campaign_id == U256::ZERO {
             panic!("Product not found");
         }
-
+        
         if !self.product_is_active.get(product_id) {
             panic!("Product not active");
         }
+        
         if self.product_is_sold.get(product_id) {
             panic!("Product already sold");
         }
 
         let product_price = self.product_price.get(product_id);
-        
-        // Check if the correct amount of ETH was sent
         if msg::value() != product_price {
             panic!("Incorrect funds sent");
         }
 
-        if !self.campaign_is_active.get(campaign_id) {
-            panic!("Campaign not active");
-        }
-
-        // Update product state
+        // Update product as sold
         self.product_is_sold.setter(product_id).set(true);
-        self.product_is_active.setter(product_id).set(false);
 
-        // Update campaign stats
+        // Update campaign sold products count
         let current_sold = self.campaign_sold_products_count.get(campaign_id);
-        let max_products = self.campaign_max_sold_products.get(campaign_id);
-        let current_amount = self.campaign_total_amount_collected.get(campaign_id);
-        
         self.campaign_sold_products_count.setter(campaign_id).set(current_sold + U256::from(1));
+
+        // Update campaign total amount collected
+        let current_amount = self.campaign_total_amount_collected.get(campaign_id);
         self.campaign_total_amount_collected.setter(campaign_id).set(current_amount + msg::value());
 
-        // Check if the campaign goal has been reached
-        if current_sold + U256::from(1) >= max_products {
-            self.campaign_is_active.setter(campaign_id).set(false);
-        }
+        // Transfer funds to destination wallet
+        let destination_wallet = self.campaign_destination_wallet.get(campaign_id);
+        let caller = msg::sender();
+        
+        // Note: In a real implementation, you would transfer ETH here
+        // For now, we just track the amount collected
     }
 
-    /// Deactivates a product. Only the product owner or campaign admin can do this.
-    pub fn deactivate_product(&mut self, product_id: U256) {
-        if product_id == U256::ZERO || product_id > self.product_count.get() {
-            panic!("Invalid ID");
+    // ===== BATCH LIST FUNCTIONS =====
+    
+    // Get all categories (returns arrays of data)
+    pub fn get_all_categories(&self) -> (Vec<U256>, Vec<U256>, Vec<Address>, Vec<bool>) {
+        let count = self.category_count.get();
+        let mut ids = Vec::new();
+        let mut name_hashes = Vec::new();
+        let mut creators = Vec::new();
+        let mut is_active = Vec::new();
+        
+        for i in 1..=count.as_limbs()[0] {
+            let id = U256::from(i);
+            let name_hash = self.category_name_hash.get(id);
+            if name_hash != U256::ZERO {
+                ids.push(id);
+                name_hashes.push(name_hash);
+                creators.push(self.category_creator.get(id));
+                is_active.push(self.category_is_active.get(id));
+            }
         }
         
-        let campaign_id = self.product_campaign_id.get(product_id);
-        if campaign_id == U256::ZERO {
-            panic!("Product not found");
-        }
+        (ids, name_hashes, creators, is_active)
+    }
 
-        if !self.product_is_active.get(product_id) {
-            panic!("Product not active");
+    // Get all campaigns (returns arrays of data)
+    pub fn get_all_campaigns(&self) -> (Vec<U256>, Vec<U256>, Vec<Address>, Vec<bool>) {
+        let count = self.campaign_count.get();
+        let mut ids = Vec::new();
+        let mut category_ids = Vec::new();
+        let mut admins = Vec::new();
+        let mut is_active = Vec::new();
+        
+        for i in 1..=count.as_limbs()[0] {
+            let id = U256::from(i);
+            let category_id = self.campaign_category_id.get(id);
+            if category_id != U256::ZERO {
+                ids.push(id);
+                category_ids.push(category_id);
+                admins.push(self.campaign_admin.get(id));
+                is_active.push(self.campaign_is_active.get(id));
+            }
         }
-        if self.product_is_sold.get(product_id) {
-            panic!("Product already sold");
+        
+        (ids, category_ids, admins, is_active)
+    }
+
+    // Get all products (returns arrays of data)
+    pub fn get_all_products(&self) -> (Vec<U256>, Vec<U256>, Vec<U256>, Vec<U256>, Vec<Address>, Vec<bool>, Vec<bool>) {
+        let count = self.product_count.get();
+        let mut ids = Vec::new();
+        let mut campaign_ids = Vec::new();
+        let mut category_ids = Vec::new();
+        let mut prices = Vec::new();
+        let mut owners = Vec::new();
+        let mut is_active = Vec::new();
+        let mut is_sold = Vec::new();
+        
+        for i in 1..=count.as_limbs()[0] {
+            let id = U256::from(i);
+            let campaign_id = self.product_campaign_id.get(id);
+            if campaign_id != U256::ZERO {
+                ids.push(id);
+                campaign_ids.push(campaign_id);
+                category_ids.push(self.product_category_id.get(id));
+                prices.push(self.product_price.get(id));
+                owners.push(self.product_owner.get(id));
+                is_active.push(self.product_is_active.get(id));
+                is_sold.push(self.product_is_sold.get(id));
+            }
         }
-
-        let caller = msg::sender();
-        let product_owner = self.product_owner.get(product_id);
-        let campaign_admin = self.campaign_admin.get(campaign_id);
-
-        if product_owner != caller && campaign_admin != caller {
-            panic!("Unauthorized");
-        }
-
-        self.product_is_active.setter(product_id).set(false);
+        
+        (ids, campaign_ids, category_ids, prices, owners, is_active, is_sold)
     }
 }
 
@@ -473,7 +379,6 @@ mod tests {
     #[test]
     fn test_compilation() {
         // This test simply checks that the code compiles
-        // Real testing would require proper VM setup which is complex
         assert!(true);
     }
 }

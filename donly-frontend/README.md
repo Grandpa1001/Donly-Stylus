@@ -1,36 +1,163 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Donly Frontend
 
-## Getting Started
+Frontend aplikacji Donly - platformy crowdfundingowej zbudowanej na Arbitrum Stylus.
 
-First, run the development server:
+## 🚀 **Status**
 
+✅ **Zintegrowany z smart contractem** na Arbitrum Sepolia  
+✅ **Gotowy do testowania** funkcji kontraktu  
+✅ **Responsywny UI** z Tailwind CSS  
+✅ **Web3 integration** z RainbowKit i Wagmi  
+
+## 🛠️ **Technologie**
+
+- **Framework:** Next.js 14
+- **Styling:** Tailwind CSS
+- **Web3:** Wagmi + RainbowKit
+- **Blockchain:** Arbitrum Sepolia
+- **Contract:** Donly Smart Contract (Stylus)
+
+## 📋 **Funkcjonalności**
+
+### ✅ **Zaimplementowane**
+- **Połączenie z portfelem** - RainbowKit integration
+- **Odczyt danych** - kategorie, kampanie, produkty
+- **Tworzenie kategorii** - interfejs do createCategory
+- **Tworzenie kampanii** - interfejs do createCampaign  
+- **Dodawanie produktów** - interfejs do addProduct
+- **Kupowanie produktów** - interfejs do purchaseProduct
+- **Wyświetlanie danych** - szczegóły kategorii, kampanii, produktów
+
+### 🎯 **Dostępne funkcje**
+- `createCategory(name)` - Tworzenie kategorii
+- `createCampaign(...)` - Tworzenie kampanii
+- `addProduct(...)` - Dodawanie produktu
+- `purchaseProduct(id)` - Kupowanie produktu
+- `categoryCount()` - Liczba kategorii
+- `campaignCount()` - Liczba kampanii
+- `productCount()` - Liczba produktów
+
+## 🚀 **Quick Start**
+
+### **1. Instalacja zależności**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd donly-frontend
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### **2. Konfiguracja środowiska**
+Stwórz plik `.env.local`:
+```env
+# Arbitrum Sepolia RPC URL
+NEXT_PUBLIC_ARBITRUM_SEPOLIA_RPC_URL=https://sepolia-rollup.arbitrum.io/rpc
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# Donly Contract Address (Arbitrum Sepolia)
+NEXT_PUBLIC_DONLY_CONTRACT_ADDRESS=0x2602c51a914d9bd5c10a96033661b09d03f805f0
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# WalletConnect Project ID (get from https://cloud.walletconnect.com/)
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
+```
 
-## Learn More
+### **3. Uruchomienie**
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Aplikacja będzie dostępna pod adresem: `http://localhost:3000`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🔗 **Integracja z Smart Contractem**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### **Adres kontraktu**
+```
+0x2602c51a914d9bd5c10a96033661b09d03f805f0
+```
 
-## Deploy on Vercel
+### **Sieć**
+- **Nazwa:** Arbitrum Sepolia
+- **Chain ID:** 421614
+- **RPC:** https://sepolia-rollup.arbitrum.io/rpc
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### **Przykład użycia**
+```typescript
+import { useContract } from '../hooks/useContract'
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+function MyComponent() {
+  const { createCategory, createCampaign } = useContract()
+  
+  const handleCreateCategory = async () => {
+    await createCategory("Electronics")
+  }
+  
+  return (
+    <button onClick={handleCreateCategory}>
+      Create Category
+    </button>
+  )
+}
+```
+
+## 📱 **Interfejs użytkownika**
+
+### **Główne sekcje:**
+1. **Statystyki** - liczba kategorii, kampanii, produktów
+2. **Tworzenie kategorii** - formularz do dodawania kategorii
+3. **Tworzenie kampanii** - formularz do tworzenia kampanii
+4. **Dodawanie produktów** - formularz do dodawania produktów
+5. **Kupowanie produktów** - interfejs do zakupów
+6. **Wyświetlanie danych** - szczegóły elementów
+
+### **Funkcje testowe:**
+- ✅ **Connect Wallet** - połączenie z portfelem
+- ✅ **Read Data** - odczyt danych z blockchain
+- ✅ **Write Transactions** - wysyłanie transakcji
+- ✅ **Real-time Updates** - automatyczne odświeżanie
+
+## 🧪 **Testowanie**
+
+### **1. Połącz portfel**
+- Kliknij "Connect Wallet"
+- Wybierz portfel (MetaMask, WalletConnect, etc.)
+- Przełącz na sieć Arbitrum Sepolia
+
+### **2. Testuj funkcje**
+- **Stwórz kategorię** - wpisz nazwę i kliknij "Create Category"
+- **Stwórz kampanię** - wypełnij formularz kampanii
+- **Dodaj produkt** - wypełnij formularz produktu
+- **Kup produkt** - wybierz ID produktu i kliknij "Purchase"
+
+### **3. Sprawdź dane**
+- Wpisz ID w sekcji "Data Display"
+- Zobacz szczegóły kategorii, kampanii, produktów
+- Sprawdź status i właściwości
+
+## 🔧 **Struktura projektu**
+
+```
+src/
+├── app/
+│   ├── page.tsx          # Główna strona z interfejsem
+│   ├── layout.tsx        # Layout z providerami
+│   └── globals.css       # Style globalne
+├── hooks/
+│   └── useContract.ts    # Hooki do interakcji z kontraktem
+└── lib/
+    ├── contract.ts       # ABI i adres kontraktu
+    └── wagmi.ts          # Konfiguracja Wagmi
+```
+
+## 🎯 **Następne kroki**
+
+- [ ] **Dodaj więcej funkcji** - dezaktywacja, zarządzanie
+- [ ] **Ulepsz UI** - lepszy design, animacje
+- [ ] **Dodaj walidację** - sprawdzanie danych wejściowych
+- [ ] **Error handling** - obsługa błędów
+- [ ] **Loading states** - stany ładowania
+- [ ] **Responsive design** - optymalizacja mobilna
+
+## 📄 **Licencja**
+
+Ten projekt jest w pełni open source z licencją Apache-2.0 lub MIT do wyboru.
+
+---
+
+**🎉 Frontend Donly jest gotowy do testowania smart contractu na Arbitrum Sepolia!**

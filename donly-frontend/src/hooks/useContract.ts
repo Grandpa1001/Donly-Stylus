@@ -6,9 +6,9 @@ export function useContract() {
 
   const createCategory = async (name: string) => {
     return writeContract({
-      address: DONLY_ADDRESS,
+      address: DONLY_ADDRESS as `0x${string}`,
       abi: DONLY_ABI,
-      functionName: 'create_category',
+      functionName: 'createCategory',
       args: [name]
     })
   }
@@ -17,39 +17,37 @@ export function useContract() {
     categoryId: bigint,
     title: string,
     description: string,
-    imageUrl: string,
     destinationWallet: `0x${string}`,
-    maxProducts: bigint
+    maxSoldProducts: bigint
   ) => {
     return writeContract({
-      address: DONLY_ADDRESS,
+      address: DONLY_ADDRESS as `0x${string}`,
       abi: DONLY_ABI,
-      functionName: 'create_campaign',
-      args: [categoryId, title, description, imageUrl, destinationWallet, maxProducts]
+      functionName: 'createCampaign',
+      args: [categoryId, title, description, destinationWallet, maxSoldProducts]
     })
   }
 
   const addProduct = async (
+    campaignId: bigint,
+    categoryId: bigint,
     name: string,
     description: string,
-    imageUrl: string,
-    price: bigint,
-    campaignId: bigint,
-    categoryId: bigint
+    price: bigint
   ) => {
     return writeContract({
-      address: DONLY_ADDRESS,
+      address: DONLY_ADDRESS as `0x${string}`,
       abi: DONLY_ABI,
-      functionName: 'add_product',
-      args: [name, description, imageUrl, price, campaignId, categoryId]
+      functionName: 'addProduct',
+      args: [campaignId, categoryId, name, description, price]
     })
   }
 
   const purchaseProduct = async (productId: bigint) => {
     return writeContract({
-      address: DONLY_ADDRESS,
+      address: DONLY_ADDRESS as `0x${string}`,
       abi: DONLY_ABI,
-      functionName: 'purchase_product',
+      functionName: 'purchaseProduct',
       args: [productId]
     })
   }
@@ -64,26 +62,140 @@ export function useContract() {
 
 export function useContractRead() {
   const { data: categoryCount } = useReadContract({
-    address: DONLY_ADDRESS,
+    address: DONLY_ADDRESS as `0x${string}`,
     abi: DONLY_ABI,
-    functionName: 'get_category_count'
+    functionName: 'categoryCount'
   })
 
   const { data: campaignCount } = useReadContract({
-    address: DONLY_ADDRESS,
+    address: DONLY_ADDRESS as `0x${string}`,
     abi: DONLY_ABI,
-    functionName: 'get_campaign_count'
+    functionName: 'campaignCount'
   })
 
   const { data: productCount } = useReadContract({
-    address: DONLY_ADDRESS,
+    address: DONLY_ADDRESS as `0x${string}`,
     abi: DONLY_ABI,
-    functionName: 'get_product_count'
+    functionName: 'productCount'
   })
 
   return {
     categoryCount,
     campaignCount,
     productCount
+  }
+}
+
+// Hook do odczytu danych konkretnych elementów
+export function useCategoryData(categoryId: bigint | undefined) {
+  const { data: nameHash } = useReadContract({
+    address: DONLY_ADDRESS as `0x${string}`,
+    abi: DONLY_ABI,
+    functionName: 'getCategoryNameHash',
+    args: categoryId ? [categoryId] : undefined
+  })
+
+  const { data: creator } = useReadContract({
+    address: DONLY_ADDRESS as `0x${string}`,
+    abi: DONLY_ABI,
+    functionName: 'getCategoryCreator',
+    args: categoryId ? [categoryId] : undefined
+  })
+
+  const { data: isActive } = useReadContract({
+    address: DONLY_ADDRESS as `0x${string}`,
+    abi: DONLY_ABI,
+    functionName: 'getCategoryIsActive',
+    args: categoryId ? [categoryId] : undefined
+  })
+
+  return {
+    nameHash,
+    creator,
+    isActive
+  }
+}
+
+export function useCampaignData(campaignId: bigint | undefined) {
+  const { data: categoryId } = useReadContract({
+    address: DONLY_ADDRESS as `0x${string}`,
+    abi: DONLY_ABI,
+    functionName: 'getCampaignCategoryId',
+    args: campaignId ? [campaignId] : undefined
+  })
+
+  const { data: admin } = useReadContract({
+    address: DONLY_ADDRESS as `0x${string}`,
+    abi: DONLY_ABI,
+    functionName: 'getCampaignAdmin',
+    args: campaignId ? [campaignId] : undefined
+  })
+
+  const { data: isActive } = useReadContract({
+    address: DONLY_ADDRESS as `0x${string}`,
+    abi: DONLY_ABI,
+    functionName: 'getCampaignIsActive',
+    args: campaignId ? [campaignId] : undefined
+  })
+
+  const { data: soldProductsCount } = useReadContract({
+    address: DONLY_ADDRESS as `0x${string}`,
+    abi: DONLY_ABI,
+    functionName: 'getCampaignSoldProductsCount',
+    args: campaignId ? [campaignId] : undefined
+  })
+
+  const { data: maxSoldProducts } = useReadContract({
+    address: DONLY_ADDRESS as `0x${string}`,
+    abi: DONLY_ABI,
+    functionName: 'getCampaignMaxSoldProducts',
+    args: campaignId ? [campaignId] : undefined
+  })
+
+
+  return {
+    categoryId,
+    admin,
+    isActive,
+    soldProductsCount,
+    maxSoldProducts
+  }
+}
+
+export function useProductData(productId: bigint | undefined) {
+  const { data: campaignId } = useReadContract({
+    address: DONLY_ADDRESS as `0x${string}`,
+    abi: DONLY_ABI,
+    functionName: 'getProductCampaignId',
+    args: productId ? [productId] : undefined
+  })
+
+  const { data: price } = useReadContract({
+    address: DONLY_ADDRESS as `0x${string}`,
+    abi: DONLY_ABI,
+    functionName: 'getProductPrice',
+    args: productId ? [productId] : undefined
+  })
+
+  const { data: isActive } = useReadContract({
+    address: DONLY_ADDRESS as `0x${string}`,
+    abi: DONLY_ABI,
+    functionName: 'getProductIsActive',
+    args: productId ? [productId] : undefined
+  })
+
+  const { data: isSold } = useReadContract({
+    address: DONLY_ADDRESS as `0x${string}`,
+    abi: DONLY_ABI,
+    functionName: 'getProductIsSold',
+    args: productId ? [productId] : undefined
+  })
+
+
+  return {
+    campaignId,
+    price,
+    isActive,
+    isSold
   }
 }

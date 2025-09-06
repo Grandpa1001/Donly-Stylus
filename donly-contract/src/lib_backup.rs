@@ -250,6 +250,49 @@ impl Donly {
         self.campaign_max_sold_products.get(id)
     }
 
+    pub fn get_campaign_title_hash(&self, id: U256) -> U256 {
+        if id == U256::ZERO || id > self.campaign_count.get() {
+            panic!("Invalid ID");
+        }
+        let category_id = self.campaign_category_id.get(id);
+        if category_id == U256::ZERO {
+            panic!("Campaign not found");
+        }
+        self.campaign_title_hash.get(id)
+    }
+
+    pub fn get_campaign_description_hash(&self, id: U256) -> U256 {
+        if id == U256::ZERO || id > self.campaign_count.get() {
+            panic!("Invalid ID");
+        }
+        let category_id = self.campaign_category_id.get(id);
+        if category_id == U256::ZERO {
+            panic!("Campaign not found");
+        }
+        self.campaign_description_hash.get(id)
+    }
+
+    pub fn get_campaign_destination_wallet(&self, id: U256) -> Address {
+        if id == U256::ZERO || id > self.campaign_count.get() {
+            panic!("Invalid ID");
+        }
+        let category_id = self.campaign_category_id.get(id);
+        if category_id == U256::ZERO {
+            panic!("Campaign not found");
+        }
+        self.campaign_destination_wallet.get(id)
+    }
+
+    pub fn get_campaign_total_amount_collected(&self, id: U256) -> U256 {
+        if id == U256::ZERO || id > self.campaign_count.get() {
+            panic!("Invalid ID");
+        }
+        let category_id = self.campaign_category_id.get(id);
+        if category_id == U256::ZERO {
+            panic!("Campaign not found");
+        }
+        self.campaign_total_amount_collected.get(id)
+    }
 
     /// Deactivates a campaign. Only the admin can do this.
     pub fn deactivate_campaign(&mut self, id: U256) {
@@ -387,6 +430,49 @@ impl Donly {
         self.product_is_sold.get(id)
     }
 
+    pub fn get_product_name_hash(&self, id: U256) -> U256 {
+        if id == U256::ZERO || id > self.product_count.get() {
+            panic!("Invalid ID");
+        }
+        let campaign_id = self.product_campaign_id.get(id);
+        if campaign_id == U256::ZERO {
+            panic!("Product not found");
+        }
+        self.product_name_hash.get(id)
+    }
+
+    pub fn get_product_description_hash(&self, id: U256) -> U256 {
+        if id == U256::ZERO || id > self.product_count.get() {
+            panic!("Invalid ID");
+        }
+        let campaign_id = self.product_campaign_id.get(id);
+        if campaign_id == U256::ZERO {
+            panic!("Product not found");
+        }
+        self.product_description_hash.get(id)
+    }
+
+    pub fn get_product_category_id(&self, id: U256) -> U256 {
+        if id == U256::ZERO || id > self.product_count.get() {
+            panic!("Invalid ID");
+        }
+        let campaign_id = self.product_campaign_id.get(id);
+        if campaign_id == U256::ZERO {
+            panic!("Product not found");
+        }
+        self.product_category_id.get(id)
+    }
+
+    pub fn get_product_owner(&self, id: U256) -> Address {
+        if id == U256::ZERO || id > self.product_count.get() {
+            panic!("Invalid ID");
+        }
+        let campaign_id = self.product_campaign_id.get(id);
+        if campaign_id == U256::ZERO {
+            panic!("Product not found");
+        }
+        self.product_owner.get(id)
+    }
 
     /// Purchases a product. The user must send the exact price in ETH.
     #[payable]

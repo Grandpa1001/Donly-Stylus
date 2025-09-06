@@ -7,7 +7,7 @@ Smart contract dla platformy crowdfundingowej Donly zbudowany na **Arbitrum Styl
 ## 🚀 **Status Projektu**
 
 ### ✅ **Wdrożony na Arbitrum Sepolia Testnet**
-- **Adres kontraktu:** `0xba18b6f947d4e2a4770b35ce1dd98a18903f09dc`
+- **Adres kontraktu:** `0x2602c51a914d9bd5c10a96033661b09d03f805f0`
 - **Sieć:** Arbitrum Sepolia
 - **Status:** Aktywny i gotowy do użycia
 - **Rozmiar:** 19.4 KiB (optymalny)
@@ -51,7 +51,7 @@ function deactivateProduct(uint256 product_id) external;
 
 ### **Arbiscan Explorer**
 ```
-https://sepolia.arbiscan.io/address/0xba18b6f947d4e2a4770b35ce1dd98a18903f09dc
+https://sepolia.arbiscan.io/address/0x2602c51a914d9bd5c10a96033661b09d03f805f0
 ```
 
 ### **ABI Interface**
@@ -116,14 +116,14 @@ cargo stylus deploy \
 cargo stylus cache bid \
   --endpoint https://sepolia-rollup.arbitrum.io/rpc \
   --private-key-path deployer.key \
-  0xba18b6f947d4e2a4770b35ce1dd98a18903f09dc 0
+  0x2602c51a914d9bd5c10a96033661b09d03f805f0 0
 ```
 
 ## 🔗 **Interakcja z kontraktem**
 
 ### **Przykład użycia z Web3.js**
 ```javascript
-const contractAddress = "0xba18b6f947d4e2a4770b35ce1dd98a18903f09dc";
+const contractAddress = "0x2602c51a914d9bd5c10a96033661b09d03f805f0";
 const abi = [/* ABI z abi.sol */];
 
 // Połączenie z kontraktem
