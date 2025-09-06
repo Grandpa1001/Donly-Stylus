@@ -3,79 +3,43 @@
  * For more information, please see [The Stylus SDK](https://github.com/OffchainLabs/stylus-sdk-rs).
  */
 
-// SPDX-License-Identifier: MIT-OR-APACHE-2.0
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.23;
 
 interface IDonly  {
+    function categoryCount() external view returns (uint256);
+
     function createCategory(string calldata name) external returns (uint256);
 
-    function getCategoryNameHash(uint256 category_id) external view returns (uint256);
+    function getCategoryNameHash(uint256 id) external view returns (uint256);
 
-    function isCategoryActive(uint256 category_id) external view returns (bool);
+    function getCategoryCreator(uint256 id) external view returns (address);
 
-    function getCategoryCreator(uint256 category_id) external view returns (address);
+    function getCategoryIsActive(uint256 id) external view returns (bool);
 
-    function getCategoryCount() external view returns (uint256);
+    function deactivateCategory(uint256 id) external;
 
-    function deactivateCategory(uint256 category_id) external;
+    function campaignCount() external view returns (uint256);
 
-    function getCategoryName(uint256 category_id) external view returns (string memory);
+    function createCampaign(uint256 category_id, string calldata title, string calldata description, address destination_wallet, uint256 max_sold_products) external returns (uint256);
 
-    function verifyCategoryName(uint256 category_id, string calldata name) external view returns (bool);
+    function getCampaignData(uint256 id) external view returns (uint256, address, bool, uint256, uint256, uint256, uint256, address);
 
-    function getCampaignCount() external view returns (uint256);
+    function deactivateCampaign(uint256 id) external;
 
-    function createCampaign(uint256 category_id, string calldata title, string calldata description, string calldata image_url, address destination_wallet, uint256 max_sold_products) external returns (uint256);
+    function productCount() external view returns (uint256);
 
-    function getCampaignData(uint256 campaign_id) external view returns (uint256, uint256, uint256, uint256, address, address, uint256, uint256, uint256, bool, uint256, uint256, uint256);
+    function addProduct(uint256 campaign_id, uint256 category_id, string calldata name, string calldata description, uint256 price) external returns (uint256);
 
-    function isCampaignActive(uint256 campaign_id) external view returns (bool);
+    function getProductCampaignId(uint256 id) external view returns (uint256);
 
-    function getCampaignStatus(uint256 campaign_id) external view returns (uint256);
+    function getProductPrice(uint256 id) external view returns (uint256);
 
-    function generateCampaignId(string calldata title, address admin) external view returns (uint256);
+    function getProductIsActive(uint256 id) external view returns (bool);
 
-    function isCampaignAdmin(uint256 campaign_id, address user) external view returns (bool);
+    function getProductIsSold(uint256 id) external view returns (bool);
 
-    function deactivateCampaign(uint256 campaign_id) external returns (bool);
+    function purchaseProduct(uint256 product_id) external payable;
 
-    function completeCampaign(uint256 campaign_id) external returns (bool);
-
-    function getCampaignDestinationWallet(uint256 campaign_id) external view returns (address);
-
-    function getCampaignTotalAmount(uint256 campaign_id) external view returns (uint256);
-
-    function getCampaignSoldProductsCount(uint256 campaign_id) external view returns (uint256);
-
-    function getProductCount() external view returns (uint256);
-
-    function addProduct(string calldata name, string calldata description, string calldata image_url, uint256 price, uint256 campaign_id, uint256 category_id) external returns (uint256);
-
-    function getProductData(uint256 product_id) external view returns (uint256, uint256, uint256, uint256, bool, bool, address, uint256, uint256, uint256, uint256);
-
-    function isProductActive(uint256 product_id) external view returns (bool);
-
-    function isProductSold(uint256 product_id) external view returns (bool);
-
-    function purchaseProduct(uint256 product_id) external returns (bool);
-
-    function updateCampaignStats(uint256 campaign_id, uint256 price) external;
-
-    function deactivateRemainingProductsInCampaign(uint256 campaign_id) external;
-
-    function getCampaignProgress(uint256 campaign_id) external view returns (uint256, uint256);
-
-    function isCampaignGoalReached(uint256 campaign_id) external view returns (bool);
-
-    function isProductOwner(uint256 product_id, address user) external view returns (bool);
-
-    function deactivateProduct(uint256 product_id) external returns (bool);
-
-    function getProductOwner(uint256 product_id) external view returns (address);
-
-    function deactivateProductByOwner(uint256 product_id) external returns (bool);
-
-    function deactivateProductByAdmin(uint256 product_id) external returns (bool);
-
-    function canDeactivateProduct(uint256 product_id) external view returns (bool);
+    function deactivateProduct(uint256 product_id) external;
 }

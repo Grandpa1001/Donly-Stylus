@@ -1,4 +1,4 @@
-export const DONLY_ADDRESS = process.env.NEXT_PUBLIC_DONLY_CONTRACT_ADDRESS || '0x2602c51a914d9bd5c10a96033661b09d03f805f0'
+export const DONLY_ADDRESS = process.env.NEXT_PUBLIC_DONLY_CONTRACT_ADDRESS || '0xf911ee1d17b0d97fff83fc2dd172a5ced688b115'
 
 export const DONLY_ABI = [
   // Category functions
@@ -68,37 +68,18 @@ export const DONLY_ABI = [
   },
   {
     "type": "function",
-    "name": "getCampaignCategoryId",
+    "name": "getCampaignData",
     "inputs": [{"type": "uint256", "name": "id"}],
-    "outputs": [{"type": "uint256"}],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getCampaignAdmin",
-    "inputs": [{"type": "uint256", "name": "id"}],
-    "outputs": [{"type": "address"}],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getCampaignIsActive",
-    "inputs": [{"type": "uint256", "name": "id"}],
-    "outputs": [{"type": "bool"}],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getCampaignSoldProductsCount",
-    "inputs": [{"type": "uint256", "name": "id"}],
-    "outputs": [{"type": "uint256"}],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getCampaignMaxSoldProducts",
-    "inputs": [{"type": "uint256", "name": "id"}],
-    "outputs": [{"type": "uint256"}],
+    "outputs": [
+      {"type": "uint256", "name": "categoryId"},
+      {"type": "address", "name": "admin"},
+      {"type": "bool", "name": "isActive"},
+      {"type": "uint256", "name": "soldProductsCount"},
+      {"type": "uint256", "name": "maxSoldProducts"},
+      {"type": "uint256", "name": "titleHash"},
+      {"type": "uint256", "name": "descriptionHash"},
+      {"type": "address", "name": "destinationWallet"}
+    ],
     "stateMutability": "view"
   },
   {

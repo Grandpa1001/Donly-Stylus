@@ -58,4 +58,9 @@ npm run dev
 - [ ] Integracja frontend-backend
 - [ ] Testy i optymalizacja
 
+## 📄 **Licencja**
+
+Ten projekt jest w pełni open source z licencją GPL-3.0-or-later.
+
+Zobacz plik [LICENSE](LICENSE) dla szczegółów.
 

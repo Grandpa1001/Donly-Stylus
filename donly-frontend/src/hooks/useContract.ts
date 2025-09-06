@@ -5,6 +5,7 @@ export function useContract() {
   const { writeContract } = useWriteContract()
 
   const createCategory = async (name: string) => {
+    console.log(`🔄 Creating Category: ${name}`)
     return writeContract({
       address: DONLY_ADDRESS as `0x${string}`,
       abi: DONLY_ABI,
@@ -20,6 +21,7 @@ export function useContract() {
     destinationWallet: `0x${string}`,
     maxSoldProducts: bigint
   ) => {
+    console.log(`🔄 Creating Campaign: ${title}`)
     return writeContract({
       address: DONLY_ADDRESS as `0x${string}`,
       abi: DONLY_ABI,
@@ -35,6 +37,7 @@ export function useContract() {
     description: string,
     price: bigint
   ) => {
+    console.log(`🔄 Adding Product: ${name}`)
     return writeContract({
       address: DONLY_ADDRESS as `0x${string}`,
       abi: DONLY_ABI,
@@ -43,12 +46,14 @@ export function useContract() {
     })
   }
 
-  const purchaseProduct = async (productId: bigint) => {
+  const purchaseProduct = async (productId: bigint, price: bigint) => {
+    console.log(`🔄 Purchasing Product #${productId}`)
     return writeContract({
       address: DONLY_ADDRESS as `0x${string}`,
       abi: DONLY_ABI,
       functionName: 'purchaseProduct',
-      args: [productId]
+      args: [productId],
+      value: price
     })
   }
 
@@ -117,48 +122,25 @@ export function useCategoryData(categoryId: bigint | undefined) {
 }
 
 export function useCampaignData(campaignId: bigint | undefined) {
-  const { data: categoryId } = useReadContract({
+  const { data: campaignData } = useReadContract({
     address: DONLY_ADDRESS as `0x${string}`,
     abi: DONLY_ABI,
-    functionName: 'getCampaignCategoryId',
+    functionName: 'getCampaignData',
     args: campaignId ? [campaignId] : undefined
   })
 
-  const { data: admin } = useReadContract({
-    address: DONLY_ADDRESS as `0x${string}`,
-    abi: DONLY_ABI,
-    functionName: 'getCampaignAdmin',
-    args: campaignId ? [campaignId] : undefined
-  })
-
-  const { data: isActive } = useReadContract({
-    address: DONLY_ADDRESS as `0x${string}`,
-    abi: DONLY_ABI,
-    functionName: 'getCampaignIsActive',
-    args: campaignId ? [campaignId] : undefined
-  })
-
-  const { data: soldProductsCount } = useReadContract({
-    address: DONLY_ADDRESS as `0x${string}`,
-    abi: DONLY_ABI,
-    functionName: 'getCampaignSoldProductsCount',
-    args: campaignId ? [campaignId] : undefined
-  })
-
-  const { data: maxSoldProducts } = useReadContract({
-    address: DONLY_ADDRESS as `0x${string}`,
-    abi: DONLY_ABI,
-    functionName: 'getCampaignMaxSoldProducts',
-    args: campaignId ? [campaignId] : undefined
-  })
-
+  // Destructure the returned tuple
+  const [categoryId, admin, isActive, soldProductsCount, maxSoldProducts, titleHash, descriptionHash, destinationWallet] = campaignData || []
 
   return {
     categoryId,
     admin,
     isActive,
     soldProductsCount,
-    maxSoldProducts
+    maxSoldProducts,
+    titleHash,
+    descriptionHash,
+    destinationWallet
   }
 }
 

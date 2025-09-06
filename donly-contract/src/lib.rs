@@ -52,6 +52,7 @@ fn keccak(data: &[u8]) -> U256 {
     U256::from_be_bytes(stylus_sdk::crypto::keccak(data).0)
 }
 
+
 #[public]
 impl Donly {
     // ===== CATEGORY FUNCTIONALITY =====
@@ -79,6 +80,7 @@ impl Donly {
         self.category_creator.setter(new_id).set(msg::sender());
         self.category_is_active.setter(new_id).set(true);
         self.category_name_hash_to_id.setter(name_hash).set(new_id);
+
 
         new_id
     }
@@ -133,17 +135,17 @@ impl Donly {
         if self.category_creator.get(id) != msg::sender() {
             panic!("Unauthorized");
         }
-
+        
         self.category_is_active.setter(id).set(false);
     }
-
+    
     // ===== CAMPAIGN FUNCTIONALITY =====
-
+    
     /// Gets the total number of campaigns created.
     pub fn campaign_count(&self) -> U256 {
         self.campaign_count.get()
     }
-
+    
     /// Creates a new campaign.
     pub fn create_campaign(
         &mut self,
@@ -191,22 +193,14 @@ impl Donly {
         self.campaign_total_amount_collected.setter(new_id).set(U256::ZERO);
         self.campaign_is_active.setter(new_id).set(true);
 
+
         new_id
     }
 
     /// Gets campaign data by ID.
-    pub fn get_campaign_category_id(&self, id: U256) -> U256 {
-        if id == U256::ZERO || id > self.campaign_count.get() {
-            panic!("Invalid ID");
-        }
-        let category_id = self.campaign_category_id.get(id);
-        if category_id == U256::ZERO {
-            panic!("Campaign not found");
-        }
-        category_id
-    }
 
-    pub fn get_campaign_admin(&self, id: U256) -> Address {
+    /// Gets all campaign data in one call
+    pub fn get_campaign_data(&self, id: U256) -> (U256, Address, bool, U256, U256, U256, U256, Address) {
         if id == U256::ZERO || id > self.campaign_count.get() {
             panic!("Invalid ID");
         }
@@ -214,40 +208,17 @@ impl Donly {
         if category_id == U256::ZERO {
             panic!("Campaign not found");
         }
-        self.campaign_admin.get(id)
-    }
-
-    pub fn get_campaign_is_active(&self, id: U256) -> bool {
-        if id == U256::ZERO || id > self.campaign_count.get() {
-            panic!("Invalid ID");
-        }
-        let category_id = self.campaign_category_id.get(id);
-        if category_id == U256::ZERO {
-            panic!("Campaign not found");
-        }
-        self.campaign_is_active.get(id)
-    }
-
-    pub fn get_campaign_sold_products_count(&self, id: U256) -> U256 {
-        if id == U256::ZERO || id > self.campaign_count.get() {
-            panic!("Invalid ID");
-        }
-        let category_id = self.campaign_category_id.get(id);
-        if category_id == U256::ZERO {
-            panic!("Campaign not found");
-        }
-        self.campaign_sold_products_count.get(id)
-    }
-
-    pub fn get_campaign_max_sold_products(&self, id: U256) -> U256 {
-        if id == U256::ZERO || id > self.campaign_count.get() {
-            panic!("Invalid ID");
-        }
-        let category_id = self.campaign_category_id.get(id);
-        if category_id == U256::ZERO {
-            panic!("Campaign not found");
-        }
-        self.campaign_max_sold_products.get(id)
+        
+        (
+            category_id,                                    // categoryId
+            self.campaign_admin.get(id),                    // admin
+            self.campaign_is_active.get(id),                // isActive
+            self.campaign_sold_products_count.get(id),      // soldProductsCount
+            self.campaign_max_sold_products.get(id),        // maxSoldProducts
+            self.campaign_title_hash.get(id),               // titleHash
+            self.campaign_description_hash.get(id),         // descriptionHash
+            self.campaign_destination_wallet.get(id)        // destinationWallet
+        )
     }
 
 
@@ -339,6 +310,7 @@ impl Donly {
         self.product_is_active.setter(new_id).set(true);
         self.product_is_sold.setter(new_id).set(false);
 
+
         new_id
     }
 
@@ -353,7 +325,7 @@ impl Donly {
         }
         campaign_id
     }
-
+    
     pub fn get_product_price(&self, id: U256) -> U256 {
         if id == U256::ZERO || id > self.product_count.get() {
             panic!("Invalid ID");
@@ -434,6 +406,7 @@ impl Donly {
         if current_sold + U256::from(1) >= max_products {
             self.campaign_is_active.setter(campaign_id).set(false);
         }
+
     }
 
     /// Deactivates a product. Only the product owner or campaign admin can do this.
@@ -469,7 +442,7 @@ impl Donly {
 #[cfg(test)]
 mod tests {
     use super::*;
-
+    
     #[test]
     fn test_compilation() {
         // This test simply checks that the code compiles

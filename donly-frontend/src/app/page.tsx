@@ -1,113 +1,158 @@
-'use client'
+import Navigation from '@/components/Navigation'
+import { CheckCircle, ArrowRight, Heart, ShieldCheck, Link2 } from 'lucide-react'
 
-import Link from 'next/link'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
-
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="max-w-6xl mx-auto px-4 py-16">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <div className="flex justify-center mb-6">
-            <ConnectButton />
-          </div>
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Donly
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Platforma crowdfundingowa zbudowana na Arbitrum Stylus. 
-            Twórz kampanie, dodawaj produkty i zbieraj środki w sposób zdecentralizowany.
-          </p>
-        </div>
-
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          <div className="bg-white p-8 rounded-xl shadow-lg">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
+      
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h1 className="text-6xl font-bold text-gray-900 leading-tight mb-6">
+                DOnly one step to
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-600"> Help</span>
+              </h1>
+              <p className="text-xl text-gray-600 mb-6 leading-relaxed">
+                Where fashion brands liquidate responsibly. We help sell end-of-season collections, 
+                turning surplus into support for NGOs driving sustainable change.
+              </p>
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 mb-8 border border-gray-200">
+                <div className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span>Transparent.</span>
+                  <CheckCircle className="w-5 h-5 text-blue-600" />
+                  <span>Responsible.</span>
+                  <CheckCircle className="w-5 h-5 text-purple-600" />
+                  <span>Powered by Blockchain.</span>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-8 py-3 rounded-md font-medium flex items-center">
+                  Shop Sustainably
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </button>
+                <button className="border border-gray-300 hover:bg-gray-50 px-8 py-3 rounded-md font-medium flex items-center">
+                  List Your Products
+                  <Heart className="w-4 h-4 ml-2" />
+                </button>
+              </div>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">Kategorie</h3>
-            <p className="text-gray-600 mb-4">
-              Organizuj swoje kampanie w kategoriach. Twórz kategorie tematyczne dla lepszej organizacji.
-            </p>
-          </div>
-
-          <div className="bg-white p-8 rounded-xl shadow-lg">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
+            <div className="relative">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+                <div className="w-full h-96 bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-gradient-to-r from-green-600 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Link2 className="w-8 h-8 text-white" />
+                    </div>
+                    <p className="text-gray-600 font-medium">Blockchain-verified transparency</p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">Kampanie</h3>
-            <p className="text-gray-600 mb-4">
-              Twórz kampanie crowdfundingowe z określonymi celami i limitami sprzedaży produktów.
-            </p>
-          </div>
-
-          <div className="bg-white p-8 rounded-xl shadow-lg">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">Produkty</h3>
-            <p className="text-gray-600 mb-4">
-              Dodawaj produkty do kampanii. Ustaw ceny i zarządzaj sprzedażą w czasie rzeczywistym.
-            </p>
           </div>
         </div>
+      </section>
 
-        {/* CTA Section */}
-        <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">
-            Gotowy do testowania?
-          </h2>
-          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-            Przejdź do panelu testowego, aby przetestować wszystkie funkcje smart contractu 
-            na sieci Arbitrum Sepolia.
+      {/* Value Proposition Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Core Values</h2>
+            <p className="text-xl text-gray-600">What drives us to create positive impact</p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              {
+                title: 'Responsibility',
+                description: 'We operate sustainably, prioritizing our stakeholders (employees, customers, local communities) and the planet.',
+                icon: Heart,
+                color: 'bg-green-100 text-green-600'
+              },
+              {
+                title: 'Openness',
+                description: 'Inclusive, open to new technologies (blockchain), and committed to equality and fighting discrimination.',
+                icon: ShieldCheck,
+                color: 'bg-blue-100 text-blue-600'
+              },
+              {
+                title: 'Trustworthiness',
+                description: 'Transparent fund distribution via blockchain. We select partners equitably and are worthy of trust.',
+                icon: Link2,
+                color: 'bg-purple-100 text-purple-600'
+              },
+              {
+                title: 'Unity (Zgrani)',
+                description: 'We listen to your needs and strive to meet them—we are here for you!',
+                icon: Heart,
+                color: 'bg-red-100 text-red-600'
+              }
+            ].map((value, index) => {
+              const Icon = value.icon
+              return (
+                <div key={index} className="text-center p-6 border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                  <div className={`w-16 h-16 ${value.color} rounded-full flex items-center justify-center mx-auto mb-6`}>
+                    <Icon className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-4 text-gray-900">{value.title}</h3>
+                  <p className="text-gray-600 leading-relaxed">{value.description}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Mission Statement */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Building Networks of Positive Impact</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Our mission extends beyond commerce to create meaningful change in communities worldwide
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              'We facilitate better world-building through conscious purchasing processes.',
+              'We satisfy customers while investing in their loyalty.',
+              'Blockchain simplifies transparent reporting on fund distribution.',
+              'We verify NGOs and their use of funds.',
+              'We embrace modernity and trends to better fulfill our mission.',
+              'We promote socially and environmentally responsible brands.'
+            ].map((point, index) => (
+              <div key={index} className="flex items-start space-x-3 p-4">
+                <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                </div>
+                <p className="text-gray-700 leading-relaxed">{point}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 bg-gradient-to-r from-green-600 to-blue-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl font-bold text-white mb-4">Ready to Make an Impact?</h2>
+          <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
+            Join thousands of conscious consumers and fashion brands creating positive change through sustainable commerce.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              href="/test"
-              className="bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-            >
-              Panel Testowy
-            </Link>
-            <a 
-              href="https://sepolia.arbiscan.io/address/0x2602c51a914d9bd5c10a96033661b09d03f805f0"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-gray-100 text-gray-700 px-8 py-4 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
-            >
-              Zobacz na Arbiscan
-            </a>
+            <button className="bg-white text-green-600 hover:bg-gray-100 px-8 py-3 rounded-md font-medium flex items-center justify-center">
+              Start Shopping
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </button>
+            <button className="border border-white text-white hover:bg-white hover:text-green-600 px-8 py-3 rounded-md font-medium flex items-center justify-center">
+              Become a Partner
+              <Heart className="w-4 h-4 ml-2" />
+            </button>
           </div>
         </div>
-
-        {/* Contract Info */}
-        <div className="mt-16 text-center">
-          <div className="bg-gray-50 rounded-lg p-6 max-w-2xl mx-auto">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Informacje o kontrakcie</h3>
-            <div className="space-y-2 text-sm text-gray-600">
-              <p>
-                <span className="font-medium">Adres:</span> 
-                <span className="font-mono ml-2">0x2602c51a914d9bd5c10a96033661b09d03f805f0</span>
-              </p>
-              <p>
-                <span className="font-medium">Sieć:</span> 
-                <span className="ml-2">Arbitrum Sepolia</span>
-              </p>
-              <p>
-                <span className="font-medium">Typ:</span> 
-                <span className="ml-2">Arbitrum Stylus (Rust)</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      </section>
     </div>
   )
 }

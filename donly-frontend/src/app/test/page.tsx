@@ -41,14 +41,36 @@ export default function TestPage() {
     
     for (let i = 1; i <= count; i++) {
       try {
-        // We'll show ID and basic info since names are stored as hashes
+        // Fetch real category data from API
+        const response = await fetch(`/api/category/${i}`)
+        if (response.ok) {
+          const categoryData = await response.json()
+          categoryList.push({ 
+            id: i, 
+            name: `Category ${i}`, // Names are stored as hashes, so we show generic names
+            status: categoryData.isActive ? 'Active' : 'Inactive',
+            creator: categoryData.creator,
+            nameHash: categoryData.nameHash
+          })
+        } else {
+          // Fallback if API fails
+          categoryList.push({ 
+            id: i, 
+            name: `Category ${i}`,
+            status: 'Unknown',
+            creator: 'N/A',
+            nameHash: 'N/A'
+          })
+        }
+      } catch (error) {
+        console.error(`Error fetching category ${i}:`, error)
         categoryList.push({ 
           id: i, 
           name: `Category ${i}`,
-          status: 'Active' // We could fetch this from contract if needed
+          status: 'Error',
+          creator: 'N/A',
+          nameHash: 'N/A'
         })
-      } catch (error) {
-        console.error(`Error fetching category ${i}:`, error)
       }
     }
     setCategories(categoryList)
@@ -62,14 +84,51 @@ export default function TestPage() {
     
     for (let i = 1; i <= count; i++) {
       try {
+        // Fetch real campaign data from API
+        const response = await fetch(`/api/campaign/${i}`)
+        if (response.ok) {
+          const campaignData = await response.json()
+          campaignList.push({ 
+            id: i, 
+            title: `Campaign ${i}`, // Titles are stored as hashes, so we show generic titles
+            status: campaignData.isActive ? 'Active' : 'Inactive',
+            categoryId: campaignData.categoryId,
+            admin: campaignData.admin,
+            destinationWallet: campaignData.destinationWallet,
+            soldProductsCount: campaignData.soldProductsCount,
+            maxSoldProducts: campaignData.maxSoldProducts,
+            titleHash: campaignData.titleHash,
+            descriptionHash: campaignData.descriptionHash
+          })
+        } else {
+          // Fallback if API fails
+          campaignList.push({ 
+            id: i, 
+            title: `Campaign ${i}`,
+            status: 'Unknown',
+            categoryId: 'N/A',
+            admin: 'N/A',
+            destinationWallet: 'N/A',
+            soldProductsCount: 'N/A',
+            maxSoldProducts: 'N/A',
+            titleHash: 'N/A',
+            descriptionHash: 'N/A'
+          })
+        }
+      } catch (error) {
+        console.error(`Error fetching campaign ${i}:`, error)
         campaignList.push({ 
           id: i, 
           title: `Campaign ${i}`,
-          status: 'Active',
-          categoryId: 'N/A' // We could fetch this from contract
+          status: 'Error',
+          categoryId: 'N/A',
+          admin: 'N/A',
+          destinationWallet: 'N/A',
+          soldProductsCount: 'N/A',
+          maxSoldProducts: 'N/A',
+          titleHash: 'N/A',
+          descriptionHash: 'N/A'
         })
-      } catch (error) {
-        console.error(`Error fetching campaign ${i}:`, error)
       }
     }
     setCampaigns(campaignList)
@@ -83,15 +142,45 @@ export default function TestPage() {
     
     for (let i = 1; i <= count; i++) {
       try {
+        // Fetch real product data from API
+        const response = await fetch(`/api/product/${i}`)
+        if (response.ok) {
+          const productData = await response.json()
+          productList.push({ 
+            id: i, 
+            name: `Product ${i}`, // Names are stored as hashes, so we show generic names
+            status: productData.isActive ? (productData.isSold ? 'Sold' : 'Active') : 'Inactive',
+            price: productData.priceInEth?.toFixed(6) || '0.00',
+            priceInWei: productData.price || '0',
+            campaignId: productData.campaignId,
+            isActive: productData.isActive,
+            isSold: productData.isSold
+          })
+        } else {
+          // Fallback if API fails
+          productList.push({ 
+            id: i, 
+            name: `Product ${i}`,
+            status: 'Unknown',
+            price: 'N/A',
+            priceInWei: 'N/A',
+            campaignId: 'N/A',
+            isActive: false,
+            isSold: false
+          })
+        }
+      } catch (error) {
+        console.error(`Error fetching product ${i}:`, error)
         productList.push({ 
           id: i, 
           name: `Product ${i}`,
-          status: 'Active',
+          status: 'Error',
           price: 'N/A',
-          campaignId: 'N/A'
+          priceInWei: 'N/A',
+          campaignId: 'N/A',
+          isActive: false,
+          isSold: false
         })
-      } catch (error) {
-        console.error(`Error fetching product ${i}:`, error)
       }
     }
     setProducts(productList)
@@ -163,11 +252,49 @@ export default function TestPage() {
   const handlePurchaseProduct = async () => {
     if (!selectedProductId) return
     try {
-      await purchaseProduct(BigInt(selectedProductId))
+      // Find the product in our local list first
+      const localProduct = products.find(p => p.id.toString() === selectedProductId)
+      
+      if (!localProduct) {
+        alert('Product not found in local list')
+        return
+      }
+      
+      if (!localProduct.isActive) {
+        alert('Product is not active')
+        return
+      }
+      
+      if (localProduct.isSold) {
+        alert('Product is already sold')
+        return
+      }
+      
+      const priceInWei = BigInt(localProduct.priceInWei)
+      const priceInEth = parseFloat(localProduct.price)
+      
+      // Show confirmation dialog
+      const confirmed = confirm(
+        `Purchase Product #${selectedProductId}?\n\n` +
+        `Price: ${priceInEth.toFixed(6)} ETH (${priceInWei.toString()} wei)\n\n` +
+        `This will send ${priceInEth.toFixed(6)} ETH to the campaign.`
+      )
+      
+      if (!confirmed) return
+      
+      await purchaseProduct(BigInt(selectedProductId), priceInWei)
       alert('Product purchased successfully!')
+      
+      // Refresh the lists
+      fetchProducts()
+      fetchCampaigns()
+      
+      // Clear the selected product
+      setSelectedProductId('')
     } catch (error) {
       console.error('Error purchasing product:', error)
-      alert('Error purchasing product')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      alert(`Error purchasing product: ${errorMessage}`)
     }
   }
 
@@ -239,7 +366,10 @@ export default function TestPage() {
                       <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">{category.status}</span>
                     </div>
                     <div className="text-sm text-gray-600">{category.name}</div>
-                    <div className="text-xs text-gray-500 mt-1">Click to use this ID in forms</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Creator: {category.creator?.slice(0, 6)}...{category.creator?.slice(-4)}
+                    </div>
+                    <div className="text-xs text-gray-500">Click to use this ID in forms</div>
                   </div>
                 ))
               ) : (
@@ -272,7 +402,15 @@ export default function TestPage() {
                       <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">{campaign.status}</span>
                     </div>
                     <div className="text-sm text-gray-600">{campaign.title}</div>
-                    <div className="text-xs text-gray-500 mt-1">Category ID: {campaign.categoryId}</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Category ID: {campaign.categoryId} | Max Products: {campaign.maxSoldProducts}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      Sold: {campaign.soldProductsCount}/{campaign.maxSoldProducts}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      Wallet: {campaign.destinationWallet?.slice(0, 6)}...{campaign.destinationWallet?.slice(-4)}
+                    </div>
                   </div>
                 ))
               ) : (
@@ -305,7 +443,12 @@ export default function TestPage() {
                       <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">{product.status}</span>
                     </div>
                     <div className="text-sm text-gray-600">{product.name}</div>
-                    <div className="text-xs text-gray-500 mt-1">Price: {product.price} | Campaign: {product.campaignId}</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Price: {product.price} ETH | Campaign: {product.campaignId}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      Price in Wei: {product.priceInWei}
+                    </div>
                   </div>
                 ))
               ) : (

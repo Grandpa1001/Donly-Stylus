@@ -172,7 +172,7 @@ donly-contract/
 
 ## 📄 **Licencja**
 
-Ten projekt jest w pełni open source z licencją Apache-2.0 lub MIT do wyboru.
+Ten projekt jest w pełni open source z licencją GPL-3.0-or-later.
 
 ---
 
