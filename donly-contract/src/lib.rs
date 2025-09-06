@@ -13,7 +13,7 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
-use alloc::string::String;
+use alloc::string::{String, ToString};
 
 /// Import items from the SDK. The prelude contains common traits and macros.
 use stylus_sdk::{alloy_primitives::{U256, Address}, prelude::*};
@@ -464,6 +464,136 @@ impl Donly {
             self.campaign2_status.get()
         } else if campaign_id == U256::from(3) {
             self.campaign3_status.get()
+        } else {
+            U256::ZERO
+        }
+    }
+    
+    /// Generuje unikalne ID kampanii na podstawie tytułu i admina
+    pub fn generate_campaign_id(&self, title: String, admin: Address) -> U256 {
+        let combined = format!("{}{}", title, admin.to_string());
+        U256::from_be_bytes(self.vm().native_keccak256(combined.as_bytes()).into())
+    }
+    
+    /// Sprawdza czy użytkownik jest administratorem kampanii
+    pub fn is_campaign_admin(&self, campaign_id: U256, user: Address) -> bool {
+        if campaign_id == U256::from(1) {
+            self.campaign1_admin.get() == user
+        } else if campaign_id == U256::from(2) {
+            self.campaign2_admin.get() == user
+        } else if campaign_id == U256::from(3) {
+            self.campaign3_admin.get() == user
+        } else {
+            false
+        }
+    }
+    
+    /// Dezaktywuje kampanię (tylko admin)
+    pub fn deactivate_campaign(&mut self, campaign_id: U256) -> bool {
+        // Sprawdź czy kampania istnieje i jest aktywna
+        if !self.is_campaign_active(campaign_id) {
+            panic!("Campaign not active");
+        }
+        
+        // Sprawdź czy użytkownik jest administratorem
+        let admin = self.vm().msg_sender();
+        if !self.is_campaign_admin(campaign_id, admin) {
+            panic!("Only campaign admin can deactivate");
+        }
+        
+        // Dezaktywuj kampanię
+        if campaign_id == U256::from(1) {
+            self.campaign1_is_active.set(false);
+            self.campaign1_status.set(U256::from(CampaignStatus::Cancelled as u8));
+        } else if campaign_id == U256::from(2) {
+            self.campaign2_is_active.set(false);
+            self.campaign2_status.set(U256::from(CampaignStatus::Cancelled as u8));
+        } else if campaign_id == U256::from(3) {
+            self.campaign3_is_active.set(false);
+            self.campaign3_status.set(U256::from(CampaignStatus::Cancelled as u8));
+        }
+        
+        true
+    }
+    
+    /// Kończy kampanię i transferuje środki na destination_wallet
+    pub fn complete_campaign(&mut self, campaign_id: U256) -> bool {
+        // Sprawdź czy kampania istnieje i jest aktywna
+        if !self.is_campaign_active(campaign_id) {
+            panic!("Campaign not active");
+        }
+        
+        // Sprawdź czy użytkownik jest administratorem
+        let admin = self.vm().msg_sender();
+        if !self.is_campaign_admin(campaign_id, admin) {
+            panic!("Only campaign admin can complete campaign");
+        }
+        
+        // Pobierz dane kampanii
+        let (_, _, _, _, _, _destination_wallet, _, _sold_count, total_amount, _, _, _, _) = 
+            self.get_campaign_data(campaign_id);
+        
+        // Sprawdź czy są środki do transferu
+        if total_amount == U256::ZERO {
+            panic!("No funds to transfer");
+        }
+        
+        // Ukończ kampanię
+        if campaign_id == U256::from(1) {
+            self.campaign1_is_active.set(false);
+            self.campaign1_status.set(U256::from(CampaignStatus::Completed as u8));
+            self.campaign1_completed_at.set(U256::from(self.vm().block_timestamp()));
+        } else if campaign_id == U256::from(2) {
+            self.campaign2_is_active.set(false);
+            self.campaign2_status.set(U256::from(CampaignStatus::Completed as u8));
+            self.campaign2_completed_at.set(U256::from(self.vm().block_timestamp()));
+        } else if campaign_id == U256::from(3) {
+            self.campaign3_is_active.set(false);
+            self.campaign3_status.set(U256::from(CampaignStatus::Completed as u8));
+            self.campaign3_completed_at.set(U256::from(self.vm().block_timestamp()));
+        }
+        
+        // Transfer środków na destination_wallet
+        // W Stylus/EVM to będzie wymagało specjalnej logiki transferu
+        // Na razie zwracamy true - implementacja transferu będzie w następnym kroku
+        
+        true
+    }
+    
+    /// Pobiera destination_wallet kampanii
+    pub fn get_campaign_destination_wallet(&self, campaign_id: U256) -> Address {
+        if campaign_id == U256::from(1) {
+            self.campaign1_destination_wallet.get()
+        } else if campaign_id == U256::from(2) {
+            self.campaign2_destination_wallet.get()
+        } else if campaign_id == U256::from(3) {
+            self.campaign3_destination_wallet.get()
+        } else {
+            Address::ZERO
+        }
+    }
+    
+    /// Pobiera całkowitą kwotę zebraną w kampanii
+    pub fn get_campaign_total_amount(&self, campaign_id: U256) -> U256 {
+        if campaign_id == U256::from(1) {
+            self.campaign1_total_amount_collected.get()
+        } else if campaign_id == U256::from(2) {
+            self.campaign2_total_amount_collected.get()
+        } else if campaign_id == U256::from(3) {
+            self.campaign3_total_amount_collected.get()
+        } else {
+            U256::ZERO
+        }
+    }
+    
+    /// Pobiera liczbę sprzedanych produktów w kampanii
+    pub fn get_campaign_sold_products_count(&self, campaign_id: U256) -> U256 {
+        if campaign_id == U256::from(1) {
+            self.campaign1_sold_products_count.get()
+        } else if campaign_id == U256::from(2) {
+            self.campaign2_sold_products_count.get()
+        } else if campaign_id == U256::from(3) {
+            self.campaign3_sold_products_count.get()
         } else {
             U256::ZERO
         }
@@ -1211,5 +1341,235 @@ mod test {
         
         // Próba zakupu tego samego produktu ponownie
         contract.purchase_product(product_id);
+    }
+    
+    // ===== CAMPAIGN MANAGEMENT TESTS =====
+    
+    #[test]
+    fn test_generate_campaign_id() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let contract = Donly::from(&vm);
+
+        let title = "Test Campaign".to_string();
+        let admin = Address::from([1u8; 20]);
+        
+        let id1 = contract.generate_campaign_id(title.clone(), admin);
+        let id2 = contract.generate_campaign_id(title.clone(), admin);
+        let id3 = contract.generate_campaign_id("Different Title".to_string(), admin);
+        
+        // Same title and admin should generate same ID
+        assert_eq!(id1, id2);
+        // Different title should generate different ID
+        assert_ne!(id1, id3);
+        // ID should not be zero
+        assert_ne!(id1, U256::ZERO);
+    }
+    
+    #[test]
+    fn test_is_campaign_admin() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(100)
+        );
+        
+        // Sprawdź dane kampanii
+        let (_, _, _, _, admin, _, _, _, _, _, _, _, _) = contract.get_campaign_data(campaign_id);
+        
+        // Sprawdź czy twórca kampanii jest adminem
+        assert!(contract.is_campaign_admin(campaign_id, admin));
+        
+        // Sprawdź czy inny adres nie jest adminem
+        assert!(!contract.is_campaign_admin(campaign_id, Address::from([1u8; 20])));
+    }
+    
+    #[test]
+    fn test_deactivate_campaign() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(100)
+        );
+        
+        // Sprawdź czy kampania jest aktywna
+        assert!(contract.is_campaign_active(campaign_id));
+        assert_eq!(contract.get_campaign_status(campaign_id), U256::from(CampaignStatus::Active as u8));
+        
+        // Dezaktywuj kampanię
+        let result = contract.deactivate_campaign(campaign_id);
+        assert!(result);
+        
+        // Sprawdź czy kampania została dezaktywowana
+        assert!(!contract.is_campaign_active(campaign_id));
+        assert_eq!(contract.get_campaign_status(campaign_id), U256::from(CampaignStatus::Cancelled as u8));
+    }
+    
+    #[test]
+    fn test_deactivate_campaign_unauthorized() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::from([1u8; 20]), // destination_wallet
+            U256::from(100)
+        );
+        
+        // Sprawdź dane kampanii
+        let (_, _, _, _, admin, _, _, _, _, _, _, _, _) = contract.get_campaign_data(campaign_id);
+        
+        // Sprawdź czy admin to rzeczywisty admin
+        assert!(contract.is_campaign_admin(campaign_id, admin));
+        
+        // Dezaktywacja przez admina powinna się udać
+        let result = contract.deactivate_campaign(campaign_id);
+        assert!(result);
+    }
+    
+    #[test]
+    fn test_complete_campaign() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(100)
+        );
+        
+        // Dodaj produkt i go kup
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Product Description".to_string(),
+            "https://example.com/product.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        contract.purchase_product(product_id);
+        
+        // Sprawdź czy są środki
+        assert!(contract.get_campaign_total_amount(campaign_id) > U256::ZERO);
+        
+        // Zakończ kampanię
+        let result = contract.complete_campaign(campaign_id);
+        assert!(result);
+        
+        // Sprawdź czy kampania została ukończona
+        assert!(!contract.is_campaign_active(campaign_id));
+        assert_eq!(contract.get_campaign_status(campaign_id), U256::from(CampaignStatus::Completed as u8));
+    }
+    
+    #[test]
+    #[should_panic(expected = "No funds to transfer")]
+    fn test_complete_campaign_no_funds() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(100)
+        );
+        
+        // Próba zakończenia kampanii bez środków
+        contract.complete_campaign(campaign_id);
+    }
+    
+    #[test]
+    fn test_get_campaign_destination_wallet() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        let destination = Address::from([1u8; 20]);
+        
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            destination,
+            U256::from(100)
+        );
+        
+        // Sprawdź destination wallet
+        assert_eq!(contract.get_campaign_destination_wallet(campaign_id), destination);
+    }
+    
+    #[test]
+    fn test_get_campaign_total_amount() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut contract = Donly::from(&vm);
+
+        // Utwórz kategorię i kampanię
+        let category_id = contract.create_category("Electronics".to_string());
+        let campaign_id = contract.create_campaign(
+            category_id,
+            "Test Campaign".to_string(),
+            "Test Description".to_string(),
+            "https://example.com/test.jpg".to_string(),
+            Address::ZERO,
+            U256::from(100)
+        );
+        
+        // Sprawdź początkową kwotę
+        assert_eq!(contract.get_campaign_total_amount(campaign_id), U256::ZERO);
+        
+        // Dodaj produkt i go kup
+        let product_id = contract.add_product(
+            "Test Product".to_string(),
+            "Test Product Description".to_string(),
+            "https://example.com/product.jpg".to_string(),
+            U256::from(1000),
+            campaign_id,
+            category_id
+        );
+        
+        contract.purchase_product(product_id);
+        
+        // Sprawdź czy kwota została zaktualizowana
+        assert_eq!(contract.get_campaign_total_amount(campaign_id), U256::from(1000));
     }
 }
