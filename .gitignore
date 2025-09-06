@@ -44,3 +44,19 @@ Thumbs.db
 # Temporary folders
 tmp/
 temp/
+
+# Private keys and sensitive files
+*.key
+*.pem
+*.p12
+*.pfx
+deployer.key
+private-key.txt
+wallet.json
+keystore/
+secrets/
+.env.secrets
+
+# Deployment files
+deployment-config.json
+contract-addresses.json
