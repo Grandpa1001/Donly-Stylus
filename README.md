@@ -2,6 +2,25 @@
 
 A decentralized crowdfunding platform built on Arbitrum Stylus using Rust, focused on sustainable fashion and responsible liquidation of end-of-season collections.
 
+## 🏆 **ETH WARSAW 2025 Hackathon Submission**
+
+**🎯 Challenge:** Best Project Using Arbitrum Stylus  
+**🏅 Bounty:** Arbitrum Bounties  
+**👤 Team:** 1/1 MgrGracz  
+**📹 Video:** Submitted via TAIKAI  
+**📄 License:** GPLv3  
+**🔗 Address:** Connected with TAIKAI  
+
+*This project demonstrates advanced Arbitrum Stylus capabilities with Rust-based smart contracts, hybrid storage architecture, and comprehensive frontend integration.*
+
+### 🚀 **Key Hackathon Achievements**
+- ✅ **Rust Smart Contract** - Full implementation using Arbitrum Stylus SDK
+- ✅ **Gas Optimization** - Hybrid storage (blockchain + Firebase) for cost efficiency
+- ✅ **Modern Frontend** - Next.js 14 with TypeScript and Web3 integration
+- ✅ **Real Deployment** - Live on Arbitrum Sepolia testnet
+- ✅ **Complete Documentation** - Comprehensive README and technical specs
+- ✅ **Open Source** - GPLv3 licensed for community contribution
+
 ## 🌟 Project Overview
 
 Donly is a blockchain-based platform where fashion brands can liquidate their surplus inventory responsibly, turning end-of-season collections into support for NGOs driving sustainable change. The platform ensures transparent fund distribution through blockchain technology.
@@ -12,10 +31,17 @@ Donly is a blockchain-based platform where fashion brands can liquidate their su
 Donly-Stylus/
 ├── donly-contract/     # Smart contract in Rust (Arbitrum Stylus)
 ├── donly-frontend/     # Frontend in React/Next.js with Firebase integration
+├── business-analysis/  # Business analysis and market research
 ├── deployment-config.json
 ├── deployer.key
 └── README.md
 ```
+
+## 📊 **Business Analysis**
+
+**📁 [Business Analysis Directory](./business-analysis/)**
+
+*Business analysis and market research documentation will be added here.*
 
 ## ✨ Core Features
 
