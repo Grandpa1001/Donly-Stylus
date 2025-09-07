@@ -1,4 +1,4 @@
-# Donly - Sustainable Fashion Crowdfunding Platform
+# Donly - Charity Marketplace platform
 
 A decentralized crowdfunding platform built on Arbitrum Stylus using Rust, focused on sustainable fashion and responsible liquidation of end-of-season collections.
 
@@ -7,7 +7,7 @@ A decentralized crowdfunding platform built on Arbitrum Stylus using Rust, focus
 **🎯 Challenge:** Best Project Using Arbitrum Stylus  
 **🏅 Bounty:** Arbitrum Bounties  
 **👤 Team:** 1/1 MgrGracz  
-**📹 Video:** Submitted via TAIKAI  
+**📹 Video:** [YouTube Demo](https://youtu.be/R2lYnw4TG7c) | Submitted via TAIKAI  
 **📄 License:** GPLv3  
 **🔗 Address:** Connected with TAIKAI  
 
@@ -17,6 +17,7 @@ A decentralized crowdfunding platform built on Arbitrum Stylus using Rust, focus
 - ✅ **Rust Smart Contract** - Full implementation using Arbitrum Stylus SDK
 - ✅ **Gas Optimization** - Hybrid storage (blockchain + Firebase) for cost efficiency
 - ✅ **Modern Frontend** - Next.js 14 with TypeScript and Web3 integration
+- ✅ **Live Demo** - [Fully functional platform](https://donly-stylus.vercel.app/) deployed on Vercel
 - ✅ **Real Deployment** - Live on Arbitrum Sepolia testnet
 - ✅ **Complete Documentation** - Comprehensive README and technical specs
 - ✅ **Open Source** - GPLv3 licensed for community contribution
@@ -210,6 +211,13 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 
 ## 🌐 **Live Deployment**
 
+### **🎯 Live Demo**
+**🚀 [Frontend Demo](https://donly-stylus.vercel.app/)** - Fully functional marketplace with Web3 integration
+
+### **📹 Demo Video**
+**🎬 [YouTube Demo](https://youtu.be/R2lYnw4TG7c)** - Complete platform walkthrough and features demonstration
+
+### **🔗 Smart Contract**
 The smart contract is deployed on **Arbitrum Sepolia Testnet**:
 
 - **Contract Address**: `0xb4e32dfc1c792424f57506a5113d40aae5fbc437`
