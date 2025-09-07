@@ -8,7 +8,7 @@ const client = createPublicClient({
   transport: http(process.env.NEXT_PUBLIC_ARBITRUM_SEPOLIA_RPC_URL)
 })
 
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_DONLY_CONTRACT_ADDRESS || '0xc2ad3070ff0a301f5df343d889da2a08eacd9792'
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_DONLY_CONTRACT_ADDRESS || '0xb4e32dfc1c792424f57506a5113d40aae5fbc437'
 
 export async function GET(
   request: NextRequest,
@@ -18,7 +18,7 @@ export async function GET(
     const productId = BigInt(params.id)
     
     // Fetch all product data in one call
-    const [campaignId, price, isActive, isSold] = await Promise.all([
+    const [campaignId, price, isActive, isSold, owner] = await Promise.all([
       client.readContract({
         address: CONTRACT_ADDRESS as `0x${string}`,
         abi: DONLY_ABI,
@@ -42,6 +42,12 @@ export async function GET(
         abi: DONLY_ABI,
         functionName: 'getProductIsSold',
         args: [productId]
+      }),
+      client.readContract({
+        address: CONTRACT_ADDRESS as `0x${string}`,
+        abi: DONLY_ABI,
+        functionName: 'getProductOwner',
+        args: [productId]
       })
     ])
 
@@ -51,6 +57,7 @@ export async function GET(
       price: price.toString(),
       isActive: isActive,
       isSold: isSold,
+      owner: owner,
       priceInEth: Number(price) / 1e18 // Convert wei to ETH for display
     })
   } catch (error) {

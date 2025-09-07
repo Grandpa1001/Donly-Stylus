@@ -2,16 +2,21 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { useAccount } from 'wagmi'
 import { Home, ShoppingBag, User, TestTube } from 'lucide-react'
 
 export default function Navigation() {
   const pathname = usePathname()
+  const { isConnected } = useAccount()
 
   const navItems = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
-    { href: '/profile', label: 'Profile', icon: User },
-    { href: '/test', label: 'Test', icon: TestTube },
+    ...(isConnected ? [
+      { href: '/profile', label: 'Profile', icon: User },
+      { href: '/test', label: 'Test', icon: TestTube }
+    ] : []),
   ]
 
   return (
@@ -48,14 +53,7 @@ export default function Navigation() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <button className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800">
-                Sign In
-              </button>
-              <button className="px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 text-white text-sm rounded-md hover:from-green-700 hover:to-blue-700">
-                Sign Up
-              </button>
-            </div>
+            <ConnectButton />
           </div>
         </div>
       </div>

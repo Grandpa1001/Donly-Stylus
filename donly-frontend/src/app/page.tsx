@@ -1,3 +1,6 @@
+'use client'
+
+import Link from 'next/link'
 import Navigation from '@/components/Navigation'
 import { CheckCircle, ArrowRight, Heart, ShieldCheck, Link2 } from 'lucide-react'
 
@@ -30,14 +33,14 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
-                <button className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-8 py-3 rounded-md font-medium flex items-center">
-                  Shop Sustainably
+                <Link href="/marketplace" className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-8 py-3 rounded-md font-medium flex items-center justify-center">
+                  Browse Marketplace
                   <ArrowRight className="w-4 h-4 ml-2" />
-                </button>
-                <button className="border border-gray-300 hover:bg-gray-50 px-8 py-3 rounded-md font-medium flex items-center">
-                  List Your Products
+                </Link>
+                <Link href="/test" className="border border-gray-300 hover:bg-gray-50 px-8 py-3 rounded-md font-medium flex items-center justify-center">
+                  Test Platform
                   <Heart className="w-4 h-4 ml-2" />
-                </button>
+                </Link>
               </div>
             </div>
             <div className="relative">
@@ -142,14 +145,14 @@ export default function HomePage() {
             Join thousands of conscious consumers and fashion brands creating positive change through sustainable commerce.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-white text-green-600 hover:bg-gray-100 px-8 py-3 rounded-md font-medium flex items-center justify-center">
-              Start Shopping
+            <Link href="/marketplace" className="bg-white text-green-600 hover:bg-gray-100 px-8 py-3 rounded-md font-medium flex items-center justify-center">
+              Browse Marketplace
               <ArrowRight className="w-4 h-4 ml-2" />
-            </button>
-            <button className="border border-white text-white hover:bg-white hover:text-green-600 px-8 py-3 rounded-md font-medium flex items-center justify-center">
-              Become a Partner
+            </Link>
+            <Link href="/test" className="border border-white text-white hover:bg-white hover:text-green-600 px-8 py-3 rounded-md font-medium flex items-center justify-center">
+              Test Platform
               <Heart className="w-4 h-4 ml-2" />
-            </button>
+            </Link>
           </div>
         </div>
       </section>

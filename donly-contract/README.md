@@ -2,178 +2,197 @@
 
 # Donly Smart Contract
 
-Smart contract dla platformy crowdfundingowej Donly zbudowany na **Arbitrum Stylus** z wykorzystaniem Rust i [stylus-sdk](https://github.com/OffchainLabs/stylus-sdk-rs). 
+A crowdfunding platform smart contract built on **Arbitrum Stylus** using Rust and the [stylus-sdk](https://github.com/OffchainLabs/stylus-sdk-rs), focused on sustainable fashion and responsible inventory liquidation. 
 
-## 🚀 **Status Projektu**
+## 🚀 **Project Status**
 
-### ✅ **Wdrożony na Arbitrum Sepolia Testnet**
-- **Adres kontraktu:** `0x2602c51a914d9bd5c10a96033661b09d03f805f0`
-- **Sieć:** Arbitrum Sepolia
-- **Status:** Aktywny i gotowy do użycia
-- **Rozmiar:** 19.4 KiB (optymalny)
-- **Cache:** Zbuforowany w ArbOS dla tańszych wywołań
+### ✅ **Deployed on Arbitrum Sepolia Testnet**
+- **Contract Address:** `0xb4e32dfc1c792424f57506a5113d40aae5fbc437`
+- **Network:** Arbitrum Sepolia (Chain ID: 421614)
+- **Status:** Active and ready for use
+- **Size:** Optimized for gas efficiency
+- **Cache:** Cached in ArbOS for cheaper calls
 
-### 📋 **Zrealizowane funkcjonalności**
+### 📋 **Implemented Features**
 
-#### 🏗️ **Architektura**
-- ✅ **Dynamiczne struktury** - bez hardkodowanych limitów
-- ✅ **Storage optimization** - użycie `sol_storage!` makro
-- ✅ **Error handling** - kompletny system błędów
-- ✅ **Gas efficiency** - zoptymalizowany kod
+#### 🏗️ **Architecture**
+- ✅ **Dynamic structures** - No hardcoded limits
+- ✅ **Storage optimization** - Using `sol_storage!` macro
+- ✅ **Error handling** - Comprehensive error system
+- ✅ **Gas efficiency** - Optimized code for minimal gas usage
 
-#### 🎯 **Funkcjonalności biznesowe**
-- ✅ **Kategorie** - tworzenie, zarządzanie, dezaktywacja
-- ✅ **Kampanie** - pełny cykl życia kampanii crowdfundingowych
-- ✅ **Produkty** - dodawanie, kupowanie, zarządzanie
-- ✅ **Płatności** - integracja z ETH
-- ✅ **Uprawnienia** - system właścicieli i administratorów
-- ✅ **Automatyzacja** - zamykanie kampanii po osiągnięciu celu
+#### 🎯 **Business Logic**
+- ✅ **Categories** - Creation, management, deactivation
+- ✅ **Campaigns** - Full crowdfunding campaign lifecycle
+- ✅ **Products** - Adding, purchasing, management
+- ✅ **Payments** - ETH integration with secure transactions
+- ✅ **Permissions** - Owner and administrator system
+- ✅ **Fund Management** - Automatic and manual fund withdrawal
 
-#### 🔧 **Funkcje kontraktu**
-```solidity
-// Kategorie
-function createCategory(string calldata name) external returns (uint256);
-function getCategoryNameHash(uint256 category_id) external view returns (uint256);
-function deactivateCategory(uint256 category_id) external;
+#### 🔧 **Contract Functions**
+```rust
+// Categories
+pub fn create_category(&mut self) -> U256
+pub fn get_category_is_active(&self, id: U256) -> bool
+pub fn deactivate_category(&mut self, id: U256)
 
-// Kampanie  
-function createCampaign(...) external returns (uint256);
-function getCampaignData(uint256 campaign_id) external view returns (...);
-function deactivateCampaign(uint256 campaign_id) external;
+// Campaigns  
+pub fn create_campaign(&mut self, category_id: U256, max_sold_products: U256, destination_wallet: Address) -> U256
+pub fn get_campaign_data(&self, id: U256) -> (U256, Address, Address, U256, U256, bool)
+pub fn deactivate_campaign(&mut self, id: U256)
 
-// Produkty
-function addProduct(...) external returns (uint256);
-function purchaseProduct(uint256 product_id) external payable;
-function deactivateProduct(uint256 product_id) external;
+// Products
+pub fn add_product(&mut self, campaign_id: U256, category_id: U256, price: U256) -> U256
+pub fn purchase_product(&mut self, id: U256) -> Result<(), Vec<u8>>
+pub fn get_product_owner(&self, id: U256) -> Address
+pub fn deactivate_product(&mut self, id: U256)
+
+// Fund Management
+pub fn withdraw_campaign_funds(&mut self, campaign_id: U256) -> Result<(), Vec<u8>>
 ```
 
-## 🌐 **Dostęp do kontraktu**
+## 🌐 **Contract Access**
 
 ### **Arbiscan Explorer**
 ```
-https://sepolia.arbiscan.io/address/0x2602c51a914d9bd5c10a96033661b09d03f805f0
+https://sepolia.arbiscan.io/address/0xb4e32dfc1c792424f57506a5113d40aae5fbc437
 ```
 
 ### **ABI Interface**
-Pełne ABI dostępne w pliku `abi.sol` - gotowe do użycia z:
+Complete ABI available in `abi.sol` file - ready to use with:
 - Web3.js
 - Ethers.js  
 - Wagmi (React)
 - Viem (TypeScript)
 
-## 🛠️ **Technologie**
+## 🛠️ **Technologies**
 
-- **Język:** Rust
-- **Platforma:** Arbitrum Stylus
+- **Language:** Rust
+- **Platform:** Arbitrum Stylus
 - **SDK:** stylus-sdk-rs v0.9.0
-- **Kompilacja:** WebAssembly (WASM)
-- **Storage:** sol_storage! makro
-- **Sieć:** Arbitrum Sepolia Testnet
+- **Compilation:** WebAssembly (WASM)
+- **Storage:** sol_storage! macro
+- **Network:** Arbitrum Sepolia Testnet
 
-## 📊 **Statystyki deploymentu**
+## 📊 **Deployment Statistics**
 
-- **Deployment tx:** `0xfc96d08af403304409413cf54377a23ad360573e62ada5dc56393d4d1e95852a`
-- **Activation tx:** `0x6ed268a04b7766e37936b70d457d7e74790399a89ec95a4c8eb0b199ff76ffb3`
-- **Cache tx:** `0x414ea7be7d3438504b2bd18b8c2791cc93710027809ffdef6152546dc58b90cf`
-- **Koszt deploymentu:** ~0.0006 ETH
-- **Metadata hash:** `b76bfbc1266157f01ccbdb8f21751db3f6e1717ea2d1dcc3104a9d1ea09b4002`
+- **Contract Address:** `0xb4e32dfc1c792424f57506a5113d40aae5fbc437`
+- **Network:** Arbitrum Sepolia Testnet
+- **Deployment Cost:** Optimized for minimal gas usage
+- **Status:** Active and fully functional
 
 ## 🚀 **Quick Start**
 
-### **Wymagania**
+### **Prerequisites**
 ```bash
-# Zainstaluj Rust
+# Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-# Dodaj target WASM
+# Add WASM target
 rustup target add wasm32-unknown-unknown
 
-# Zainstaluj Stylus CLI
+# Install Stylus CLI
 cargo install --force cargo-stylus cargo-stylus-check
 ```
 
-### **Kompilacja**
+### **Compilation**
 ```bash
-# Sprawdź kompilację
+# Check compilation
 cargo stylus check
 
-# Eksportuj ABI
+# Export ABI
 cargo stylus export-abi
 
-# Uruchom testy
+# Run tests
 cargo test
 ```
 
-### **Deployment** (już wykonane)
+### **Deployment** (already completed)
 ```bash
-# Deploy na Arbitrum Sepolia
+# Deploy to Arbitrum Sepolia
 cargo stylus deploy \
   --endpoint https://sepolia-rollup.arbitrum.io/rpc \
   --private-key-path deployer.key \
   --no-verify
 
-# Cache kontraktu
+# Cache contract for cheaper calls
 cargo stylus cache bid \
   --endpoint https://sepolia-rollup.arbitrum.io/rpc \
   --private-key-path deployer.key \
-  0x2602c51a914d9bd5c10a96033661b09d03f805f0 0
+  0xb4e32dfc1c792424f57506a5113d40aae5fbc437 0
 ```
 
-## 🔗 **Interakcja z kontraktem**
+## 🔗 **Contract Interaction**
 
-### **Przykład użycia z Web3.js**
+### **Example Usage with Web3.js**
 ```javascript
-const contractAddress = "0x2602c51a914d9bd5c10a96033661b09d03f805f0";
-const abi = [/* ABI z abi.sol */];
+const contractAddress = "0xb4e32dfc1c792424f57506a5113d40aae5fbc437";
+const abi = [/* ABI from abi.sol */];
 
-// Połączenie z kontraktem
+// Connect to contract
 const contract = new web3.eth.Contract(abi, contractAddress);
 
-// Tworzenie kategorii
-await contract.methods.createCategory("Electronics").send({from: userAddress});
+// Create category (owner only)
+await contract.methods.createCategory().send({from: ownerAddress});
 
-// Tworzenie kampanii
+// Create campaign (owner only)
 await contract.methods.createCampaign(
   categoryId,
-  "Amazing Project",
-  "Description...",
-  "https://image.url",
-  destinationWallet,
-  100
+  maxSoldProducts,
+  destinationWallet
+).send({from: ownerAddress});
+
+// Add product (any user)
+await contract.methods.addProduct(
+  campaignId,
+  categoryId,
+  priceInWei
 ).send({from: userAddress});
 
-// Kupowanie produktu
+// Purchase product
 await contract.methods.purchaseProduct(productId).send({
   from: userAddress,
-  value: web3.utils.toWei("0.1", "ether")
+  value: productPriceInWei
 });
+
+// Withdraw campaign funds (owner only)
+await contract.methods.withdrawCampaignFunds(campaignId).send({from: ownerAddress});
 ```
 
-## 📁 **Struktura projektu**
+### **Data Storage Architecture**
+The contract uses a hybrid approach:
+- **On-chain**: Critical data (prices, ownership, transaction state)
+- **Off-chain (Firebase)**: Metadata (names, descriptions, images)
+
+This design optimizes gas costs while maintaining security and functionality.
+
+## 📁 **Project Structure**
 
 ```
 donly-contract/
 ├── src/
-│   ├── lib.rs          # Główny kod smart contractu
+│   ├── lib.rs          # Main smart contract code
 │   └── main.rs         # Entry point
 ├── abi.sol             # Solidity ABI interface
 ├── abi.json            # JSON ABI
-├── deployer.key        # Klucz prywatny do deploymentu
-└── Cargo.toml          # Zależności Rust
+├── deployer.key        # Private key for deployment
+└── Cargo.toml          # Rust dependencies
 ```
 
-## 🎯 **Następne kroki**
+## 🎯 **Next Steps**
 
-- [ ] **Weryfikacja na Arbiscan** - dla lepszej widoczności
-- [ ] **Frontend development** - interfejs użytkownika
-- [ ] **Testowanie funkcji** - kompleksowe testy
-- [ ] **Deploy na mainnet** - gdy projekt będzie gotowy
-- [ ] **Dokumentacja API** - szczegółowa dokumentacja
+- [x] **Contract Development** - Core functionality implemented
+- [x] **Deployment** - Successfully deployed to Arbitrum Sepolia
+- [x] **Frontend Integration** - React/Next.js application
+- [x] **Firebase Integration** - Metadata storage system
+- [x] **Testing** - Comprehensive testing completed
+- [ ] **Mainnet Deployment** - When project is production-ready
+- [ ] **Advanced Features** - Enhanced permission system
 
-## 📄 **Licencja**
+## 📄 **License**
 
-Ten projekt jest w pełni open source z licencją GPL-3.0-or-later.
+This project is fully open source under the GPL-3.0-or-later license.
 
 ---
 
-**🎉 Smart contract Donly jest w pełni funkcjonalny i gotowy do użycia na Arbitrum Sepolia!**
+**🎉 The Donly smart contract is fully functional and ready for use on Arbitrum Sepolia!**

@@ -314,6 +314,18 @@ impl Donly {
         self.product_is_sold.get(id)
     }
 
+    /// Gets a product's owner by its ID.
+    pub fn get_product_owner(&self, id: U256) -> Address {
+        if id == U256::ZERO || id > self.product_count.get() {
+            panic!("Invalid ID");
+        }
+        let campaign_id = self.product_campaign_id.get(id);
+        if campaign_id == U256::ZERO {
+            panic!("Product not found");
+        }
+        self.product_owner.get(id)
+    }
+
 
     /// Purchases a product. The user must send the exact price in ETH.
     #[payable]

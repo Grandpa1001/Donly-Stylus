@@ -1,4 +1,4 @@
-export const DONLY_ADDRESS = process.env.NEXT_PUBLIC_DONLY_CONTRACT_ADDRESS || '0xc2ad3070ff0a301f5df343d889da2a08eacd9792'
+export const DONLY_ADDRESS = process.env.NEXT_PUBLIC_DONLY_CONTRACT_ADDRESS || '0xb4e32dfc1c792424f57506a5113d40aae5fbc437'
 
 export const DONLY_ABI = [
   // Category functions
@@ -131,6 +131,13 @@ export const DONLY_ABI = [
     "name": "getProductIsSold",
     "inputs": [{"type": "uint256", "name": "id"}],
     "outputs": [{"type": "bool"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getProductOwner",
+    "inputs": [{"type": "uint256", "name": "id"}],
+    "outputs": [{"type": "address"}],
     "stateMutability": "view"
   },
   {

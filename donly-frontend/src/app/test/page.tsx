@@ -1,23 +1,76 @@
 'use client'
 
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { useContract, useContractRead, useCategoryData, useCampaignData, useProductData } from '../../hooks/useContract'
+import { useAccount } from 'wagmi'
+import { useContract, useContractRead } from '../../hooks/useContract'
+import { useFirebaseAPIWithAutoFetch } from '../../hooks/useFirebaseAPI'
 import { DONLY_ADDRESS } from '../../lib/contract'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { Wallet } from 'lucide-react'
 
 export default function TestPage() {
+  const { isConnected } = useAccount()
+  
+  if (!isConnected) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-6xl mx-auto px-4">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Panel Testowy</h1>
+              <p className="text-gray-600">Testuj funkcje smart contractu na Arbitrum Sepolia</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <Link href="/" className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+                ← Home
+              </Link>
+              <ConnectButton />
+            </div>
+          </div>
+
+          {/* Connect Wallet Section */}
+          <div className="text-center py-16">
+            <div className="w-24 h-24 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center mx-auto mb-8">
+              <Wallet className="w-12 h-12 text-white" />
+            </div>
+            
+            <h2 className="text-4xl font-bold text-gray-900 mb-6">
+              Connect Wallet
+            </h2>
+            
+            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+              To access the smart contract test panel, you must first connect your wallet.
+            </p>
+            
+            <div className="bg-white rounded-lg shadow-sm p-8 max-w-md mx-auto">
+              <ConnectButton />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const [categoryName, setCategoryName] = useState('')
+  const [campaignName, setCampaignName] = useState('')
+  const [campaignDescription, setCampaignDescription] = useState('')
   const [destinationWallet, setDestinationWallet] = useState('')
   const [maxProducts, setMaxProducts] = useState('')
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [selectedCampaignId, setSelectedCampaignId] = useState('')
+  const [productName, setProductName] = useState('')
+  const [productDescription, setProductDescription] = useState('')
   const [productPrice, setProductPrice] = useState('')
+  const [productImageUrl, setProductImageUrl] = useState('')
   const [selectedProductId, setSelectedProductId] = useState('')
   
   // Lists for displaying data
   const [categories, setCategories] = useState<any[]>([])
   const [campaigns, setCampaigns] = useState<any[]>([])
   const [products, setProducts] = useState<any[]>([])
+  
 
   const {
     createCategory,
@@ -28,6 +81,24 @@ export default function TestPage() {
   } = useContract()
 
   const { categoryCount, campaignCount, productCount } = useContractRead()
+  
+  // Firebase hooks
+  const { 
+    categories: firebaseCategories, 
+    campaigns: firebaseCampaigns,
+    products: firebaseProducts,
+    addCategory: addCategoryToFirebase, 
+    addCampaign: addCampaignToFirebase,
+    addProduct: addProductToFirebase,
+    getCategoryName, 
+    getCampaignName,
+    getCampaignDescription,
+    getProductName,
+    getProductDescription,
+    getProductPriceInEth,
+    getProductImageUrl,
+    loading: firebaseLoading 
+  } = useFirebaseAPIWithAutoFetch()
 
   // Function to fetch categories list
   const fetchCategories = async () => {
@@ -41,12 +112,14 @@ export default function TestPage() {
         const response = await fetch(`/api/category/${i}`)
         if (response.ok) {
           const categoryData = await response.json()
+          // Get category name from Firebase
+          const firebaseCategoryName = getCategoryName(i)
+          
           categoryList.push({ 
             id: i, 
-            name: `Category ${i}`, // Names are stored as hashes, so we show generic names
+            name: firebaseCategoryName,
             status: categoryData.isActive ? 'Active' : 'Inactive',
             creator: categoryData.creator,
-            nameHash: categoryData.nameHash
           })
         } else {
           // Fallback if API fails
@@ -86,9 +159,11 @@ export default function TestPage() {
           const campaignData = await response.json()
           campaignList.push({ 
             id: i, 
-            title: `Campaign ${i}`, // Titles are stored as hashes, so we show generic titles
+            title: getCampaignName(i), // Get campaign name from Firebase
+            description: getCampaignDescription(i), // Get campaign description from Firebase
             status: campaignData.isActive ? 'Active' : 'Inactive',
             categoryId: campaignData.categoryId,
+            categoryName: getCategoryName(Number(campaignData.categoryId)), // Get category name from Firebase
             admin: campaignData.admin,
             destinationWallet: campaignData.destinationWallet,
             soldProductsCount: campaignData.soldProductsCount,
@@ -144,11 +219,15 @@ export default function TestPage() {
           const productData = await response.json()
           productList.push({ 
             id: i, 
-            name: `Product ${i}`, // Names are stored as hashes, so we show generic names
+            name: getProductName(i), // Get product name from Firebase
+            description: getProductDescription(i), // Get product description from Firebase
             status: productData.isActive ? (productData.isSold ? 'Sold' : 'Active') : 'Inactive',
-            price: productData.priceInEth?.toFixed(6) || '0.00',
+            price: getProductPriceInEth(i).toFixed(6), // Get price from Firebase
             priceInWei: productData.price || '0',
+            imageUrl: getProductImageUrl(i), // Get image URL from Firebase
             campaignId: productData.campaignId,
+            categoryId: productData.categoryId,
+            categoryName: getCategoryName(Number(productData.categoryId)), // Get category name from Firebase
             isActive: productData.isActive,
             isSold: productData.isSold
           })
@@ -190,27 +269,66 @@ export default function TestPage() {
   }, [categoryCount, campaignCount, productCount])
 
   const handleCreateCategory = async () => {
+    if (!categoryName.trim()) {
+      alert('Please enter a category name')
+      return
+    }
+    
     try {
-      await createCategory()
+      // Create category on blockchain
+      const result = await createCategory()
+      
+      // Get the transaction result to extract the category ID
+      // For now, we'll use the current category count + 1 as the ID
+      const newCategoryId = Number(categoryCount) + 1
+      
+      // Add category to Firebase
+      await addCategoryToFirebase(categoryName.trim(), newCategoryId)
+      
+      setCategoryName('')
       alert('Category created successfully!')
+      
+      // Refresh the categories list
+      fetchCategories()
     } catch (error) {
       console.error('Error creating category:', error)
       alert('Error creating category')
     }
   }
 
+
   const handleCreateCampaign = async () => {
-    if (!destinationWallet || !maxProducts || !selectedCategoryId) return
+    if (!campaignName || !campaignDescription || !destinationWallet || !maxProducts || !selectedCategoryId) {
+      alert('Please fill in all fields')
+      return
+    }
     try {
+      // Create campaign on blockchain
       await createCampaign(
         BigInt(selectedCategoryId),
         destinationWallet as `0x${string}`,
         BigInt(maxProducts)
       )
+      
+      // Get the new campaign ID (current count + 1)
+      const newCampaignId = Number(campaignCount) + 1
+      
+      // Add campaign to Firebase with user-provided name and description
+      await addCampaignToFirebase(
+        campaignName.trim(),
+        campaignDescription.trim(),
+        newCampaignId
+      )
+      
+      setCampaignName('')
+      setCampaignDescription('')
       setDestinationWallet('')
       setMaxProducts('')
       setSelectedCategoryId('')
       alert('Campaign created successfully!')
+      
+      // Refresh the campaigns list
+      fetchCampaigns()
     } catch (error) {
       console.error('Error creating campaign:', error)
       alert('Error creating campaign')
@@ -218,17 +336,51 @@ export default function TestPage() {
   }
 
   const handleAddProduct = async () => {
-    if (!productPrice || !selectedCampaignId || !selectedCategoryId) return
+    if (!productName || !productDescription || !productPrice || !productImageUrl || !selectedCampaignId) {
+      alert('Please fill in all fields and select a campaign')
+      return
+    }
+    
+    // Category should be auto-filled from campaign, but let's double-check
+    if (!selectedCategoryId) {
+      alert('Please select a campaign first')
+      return
+    }
     try {
+      // Convert ETH to Wei for blockchain
+      const priceInWei = BigInt(Math.floor(parseFloat(productPrice) * 1e18))
+      
+      // Add product to blockchain
       await addProduct(
         BigInt(selectedCampaignId),
         BigInt(selectedCategoryId),
-        BigInt(productPrice)
+        priceInWei
       )
+      
+      // Get the new product ID (current count + 1)
+      const newProductId = Number(productCount) + 1
+      
+      // Add product to Firebase with user-provided data
+      await addProductToFirebase(
+        productName.trim(),
+        productDescription.trim(),
+        parseFloat(productPrice),
+        productImageUrl.trim(),
+        newProductId,
+        Number(selectedCampaignId),
+        Number(selectedCategoryId)
+      )
+      
+      setProductName('')
+      setProductDescription('')
       setProductPrice('')
+      setProductImageUrl('')
       setSelectedCampaignId('')
-      setSelectedCategoryId('')
+      // Don't reset selectedCategoryId as it's auto-filled from campaign
       alert('Product added successfully!')
+      
+      // Refresh the products list
+      fetchProducts()
     } catch (error) {
       console.error('Error adding product:', error)
       alert('Error adding product')
@@ -256,8 +408,9 @@ export default function TestPage() {
         return
       }
       
-      const priceInWei = BigInt(localProduct.priceInWei)
-      const priceInEth = parseFloat(localProduct.price)
+      // Get price from Firebase (more reliable than blockchain data)
+      const priceInEth = getProductPriceInEth(Number(selectedProductId))
+      const priceInWei = BigInt(Math.floor(priceInEth * 1e18))
       
       // Show confirmation dialog
       const confirmed = confirm(
@@ -301,6 +454,8 @@ export default function TestPage() {
   }
 
 
+
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
@@ -315,18 +470,21 @@ export default function TestPage() {
               href="/"
               className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
             >
-              ← Strona główna
+                ← Home
             </Link>
             <ConnectButton />
           </div>
         </div>
 
         {/* Contract Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Categories</h3>
             <p className="text-3xl font-bold text-blue-600">
               {categoryCount?.toString() || '0'}
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              Firebase: {firebaseCategories.length}
             </p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow">
@@ -341,7 +499,14 @@ export default function TestPage() {
               {productCount?.toString() || '0'}
             </p>
           </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Firebase Status</h3>
+            <p className={`text-lg font-bold ${firebaseLoading ? 'text-yellow-600' : 'text-green-600'}`}>
+              {firebaseLoading ? 'Loading...' : 'Connected'}
+            </p>
+          </div>
         </div>
+
 
         {/* Lists Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -406,7 +571,10 @@ export default function TestPage() {
                     </div>
                     <div className="text-sm text-gray-600">{campaign.title}</div>
                     <div className="text-xs text-gray-500 mt-1">
-                      Category ID: {campaign.categoryId} | Max Products: {campaign.maxSoldProducts}
+                      {campaign.description}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Category: {campaign.categoryName} | Max Products: {campaign.maxSoldProducts}
                     </div>
                     <div className="text-xs text-gray-500">
                       Sold: {campaign.soldProductsCount}/{campaign.maxSoldProducts}
@@ -447,10 +615,22 @@ export default function TestPage() {
                     </div>
                     <div className="text-sm text-gray-600">{product.name}</div>
                     <div className="text-xs text-gray-500 mt-1">
-                      Price: {product.price} ETH | Campaign: {product.campaignId}
+                      {product.description}
                     </div>
-                    <div className="text-xs text-gray-500">
-                      Price in Wei: {product.priceInWei}
+                    {product.imageUrl && (
+                      <div className="mt-2">
+                        <img 
+                          src={product.imageUrl} 
+                          alt={product.name}
+                          className="w-20 h-20 object-cover rounded border"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-500 mt-1">
+                      Price: {product.price} ETH | Campaign: {product.campaignId} | Category: {product.categoryName}
                     </div>
                   </div>
                 ))
@@ -467,6 +647,13 @@ export default function TestPage() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Create Category</h2>
           <div className="space-y-4">
+            <input
+              type="text"
+              placeholder="Category name"
+              value={categoryName}
+              onChange={(e) => setCategoryName(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
             <button
               onClick={handleCreateCategory}
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
@@ -482,6 +669,20 @@ export default function TestPage() {
             <div className="space-y-4">
               <input
                 type="text"
+                placeholder="Campaign Name"
+                value={campaignName}
+                onChange={(e) => setCampaignName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+              <textarea
+                placeholder="Campaign Description"
+                value={campaignDescription}
+                onChange={(e) => setCampaignDescription(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                rows={3}
+              />
+              <input
+                type="text"
                 placeholder="Destination wallet (0x...)"
                 value={destinationWallet}
                 onChange={(e) => setDestinationWallet(e.target.value)}
@@ -494,13 +695,18 @@ export default function TestPage() {
                 onChange={(e) => setMaxProducts(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               />
-              <input
-                type="number"
-                placeholder="Category ID"
+              <select
                 value={selectedCategoryId}
                 onChange={(e) => setSelectedCategoryId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
+              >
+                <option value="">Select Category</option>
+                {firebaseCategories.map((category) => (
+                  <option key={category.id} value={category.blockchainId}>
+                    {category.name} (ID: {category.blockchainId})
+                  </option>
+                ))}
+              </select>
               <button
                 onClick={handleCreateCampaign}
                 className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
@@ -515,25 +721,63 @@ export default function TestPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Add Product</h2>
             <div className="space-y-4">
               <input
+                type="text"
+                placeholder="Product Name"
+                value={productName}
+                onChange={(e) => setProductName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+              <textarea
+                placeholder="Product Description"
+                value={productDescription}
+                onChange={(e) => setProductDescription(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                rows={3}
+              />
+              <input
                 type="number"
-                placeholder="Price (wei)"
+                step="0.001"
+                placeholder="Price (ETH)"
                 value={productPrice}
                 onChange={(e) => setProductPrice(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
               <input
-                type="number"
-                placeholder="Campaign ID"
-                value={selectedCampaignId}
-                onChange={(e) => setSelectedCampaignId(e.target.value)}
+                type="url"
+                placeholder="Image URL"
+                value={productImageUrl}
+                onChange={(e) => setProductImageUrl(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
-              <input
-                type="number"
-                placeholder="Category ID"
-                value={selectedCategoryId}
-                onChange={(e) => setSelectedCategoryId(e.target.value)}
+              <select
+                value={selectedCampaignId}
+                onChange={(e) => {
+                  setSelectedCampaignId(e.target.value)
+                  // Auto-set category based on selected campaign
+                  if (e.target.value) {
+                    const campaign = campaigns.find(c => c.id.toString() === e.target.value)
+                    if (campaign) {
+                      setSelectedCategoryId(campaign.categoryId.toString())
+                    }
+                  }
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="">Select Campaign</option>
+                {campaigns
+                  .filter(campaign => campaign.status === 'Active')
+                  .map((campaign) => (
+                    <option key={campaign.id} value={campaign.id}>
+                      {campaign.title} (ID: {campaign.id}) - {campaign.categoryName}
+                    </option>
+                  ))}
+              </select>
+              <input
+                type="text"
+                placeholder="Category (auto-filled)"
+                value={selectedCategoryId ? firebaseCategories.find(c => c.blockchainId.toString() === selectedCategoryId)?.name || `Category ${selectedCategoryId}` : ''}
+                disabled
+                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
               />
               <button
                 onClick={handleAddProduct}
@@ -548,13 +792,20 @@ export default function TestPage() {
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Purchase Product</h2>
             <div className="space-y-4">
-              <input
-                type="number"
-                placeholder="Product ID"
+              <select
                 value={selectedProductId}
                 onChange={(e) => setSelectedProductId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
+              >
+                <option value="">Select Product</option>
+                {products
+                  .filter(product => product.isActive && !product.isSold)
+                  .map((product) => (
+                    <option key={product.id} value={product.id}>
+                      {product.name} - {product.price} ETH (ID: {product.id})
+                    </option>
+                  ))}
+              </select>
               <button
                 onClick={handlePurchaseProduct}
                 className="w-full bg-orange-600 text-white py-2 px-4 rounded-md hover:bg-orange-700 transition-colors"
@@ -570,13 +821,20 @@ export default function TestPage() {
           <div className="bg-white p-6 rounded-lg shadow max-w-md mx-auto">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Withdraw Campaign Funds</h2>
             <div className="space-y-4">
-              <input
-                type="number"
-                placeholder="Campaign ID"
+              <select
                 value={selectedCampaignId}
                 onChange={(e) => setSelectedCampaignId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-              />
+              >
+                <option value="">Select Campaign</option>
+                {campaigns
+                  .filter(campaign => campaign.status === 'Active')
+                  .map((campaign) => (
+                    <option key={campaign.id} value={campaign.id}>
+                      {campaign.title} (ID: {campaign.id}) - {campaign.categoryName}
+                    </option>
+                  ))}
+              </select>
               <button
                 onClick={handleWithdrawCampaignFunds}
                 className="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
