@@ -26,6 +26,16 @@
 4. Select **"Donly-Stylus"** repository
 5. Choose **"donly-frontend"** as root directory
 
+#### **1.1. Framework Settings (if not auto-detected)**
+If Vercel doesn't auto-detect Next.js, configure manually:
+
+- **Framework Preset**: `Next.js`
+- **Root Directory**: `donly-frontend`
+- **Build Command**: `npm run build`
+- **Output Directory**: `.next`
+- **Install Command**: `npm install`
+- **Development Command**: `npm run dev`
+
 #### **2. Configure Environment Variables**
 In Vercel dashboard, add these environment variables:
 
@@ -127,7 +137,20 @@ Once deployed, your project will be available at:
 
 ## 🚨 **Troubleshooting**
 
-### **Common Issues**
+### **Framework Detection Issues**
+
+#### **Vercel doesn't detect Next.js**
+If Vercel shows "No Framework Detected":
+
+1. **Manual Configuration**:
+   - Framework Preset: `Next.js`
+   - Root Directory: `donly-frontend`
+   - Build Command: `npm run build`
+   - Output Directory: `.next`
+   - Install Command: `npm install`
+   - Development Command: `npm run dev`
+
+2. **Alternative**: Use the `vercel.json` file (already created in project)
 
 #### **Build Fails**
 ```bash
