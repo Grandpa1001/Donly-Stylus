@@ -123,6 +123,13 @@ Donly-Stylus/
 - Arbitrum Stylus CLI
 - MetaMask or compatible Web3 wallet
 
+### **🚀 Quick Deployment**
+For immediate deployment to a live website, see our deployment guide:
+
+**📖 [Deployment Guide](./DEPLOYMENT.md)**
+
+*Recommended: Deploy to Vercel for instant live demo*
+
 ### **Smart Contract Development**
 ```bash
 # Navigate to contract directory
