@@ -36,19 +36,34 @@ If Vercel doesn't auto-detect Next.js, configure manually:
 - **Install Command**: `npm install`
 - **Development Command**: `npm run dev`
 
+**Note**: The project includes a `vercel.json` file in the root directory that automatically configures these settings for the `donly-frontend` subdirectory.
+
 #### **2. Configure Environment Variables**
-In Vercel dashboard, add these environment variables:
+In Vercel dashboard, go to **Settings** → **Environment Variables** and add these variables:
 
 ```env
-NEXT_PUBLIC_DONLY_CONTRACT_ADDRESS=0xb4e32dfc1c792424f57506a5113d40aae5fbc437
+# Blockchain Configuration
 NEXT_PUBLIC_ARBITRUM_SEPOLIA_RPC_URL=https://sepolia-rollup.arbitrum.io/rpc
-NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=donly-18a81.firebaseapp.com
+NEXT_PUBLIC_DONLY_CONTRACT_ADDRESS=0xb4e32dfc1c792424f57506a5113d40aae5fbc437
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=demo_project_id
+
+# Firebase Configuration (Public)
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=donly-18a81
+NEXT_PUBLIC_FIREBASE_PROJECT_NUMBER=583183369780
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyDYmBw7JQmVIHWN_0Sytsc3Ulsle13v9do
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=donly-18a81.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=donly-18a81.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=583183369780
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+NEXT_PUBLIC_FIREBASE_APP_ID=1:583183369780:web:8c605a5b845a4ed42fec61
+
+# Firebase Admin SDK (Server-side only)
+FIREBASE_ADMIN_PROJECT_ID=donly-18a81
+FIREBASE_ADMIN_PRIVATE_KEY_ID=7cf2d178260dd669dc8d6dcc9db92505b608c366
+FIREBASE_ADMIN_CLIENT_EMAIL=firebase-adminsdk-fbsvc@donly-18a81.iam.gserviceaccount.com
+FIREBASE_ADMIN_CLIENT_ID=100997656680027851997
 ```
+
+**Important**: Make sure to set these for **Production**, **Preview**, and **Development** environments.
 
 #### **3. Deploy**
 - Click **"Deploy"**

@@ -1,0 +1,7 @@
+{
+  "buildCommand": "cd donly-frontend && npm run build",
+  "outputDirectory": "donly-frontend/.next",
+  "installCommand": "cd donly-frontend && npm install",
+  "devCommand": "cd donly-frontend && npm run dev",
+  "framework": "nextjs"
+}
