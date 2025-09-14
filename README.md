@@ -22,6 +22,9 @@ A decentralized crowdfunding platform built on Arbitrum Stylus using Rust, focus
 - ✅ **Complete Documentation** - Comprehensive README and technical specs
 - ✅ **Open Source** - GPLv3 licensed for community contribution
 
+<img width="1399" height="1173" alt="Donly" src="https://github.com/user-attachments/assets/ec5a7e32-0c5b-42d9-aae3-52ad2c80f3a3" />
+
+
 ## 🌟 Project Overview
 
 Donly is a blockchain-based platform where fashion brands can liquidate their surplus inventory responsibly, turning end-of-season collections into support for NGOs driving sustainable change. The platform ensures transparent fund distribution through blockchain technology.
